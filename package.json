@@ -9,9 +9,9 @@
     "ios-device": "expo run:ios --device"
   },
   "dependencies": {
-    "expo": "~53.0.11",
+    "expo": "~53.0.12",
     "expo-status-bar": "~2.2.3",
-    "react": "19.0.0",
+    "react": "19.1.0",
     "react-native": "0.79.4",
     "expo-system-ui": "~5.0.9"
   },
