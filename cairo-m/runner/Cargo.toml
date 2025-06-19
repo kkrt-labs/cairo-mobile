@@ -1,0 +1,14 @@
+[package]
+name = "cairo-m-runner"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+cairo-m-runner.workspace = true
+cairo-m-compiler.workspace = true
+thiserror.workspace = true
+sonic-rs.workspace = true
+uniffi.workspace = true

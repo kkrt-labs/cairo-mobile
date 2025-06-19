@@ -347,20 +347,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
-name = "cairo-m"
-version = "0.1.0"
-dependencies = [
- "cairo-m-compiler",
- "cairo-m-runner",
- "sonic-rs 0.5.1",
- "thiserror 2.0.12",
- "uniffi",
-]
-
-[[package]]
 name = "cairo-m-compiler"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -381,7 +370,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-codegen"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "cairo-m-compiler-diagnostics",
  "cairo-m-compiler-mir",
@@ -403,7 +392,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -412,7 +401,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-mir"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "cairo-m-compiler-diagnostics",
  "cairo-m-compiler-parser",
@@ -427,7 +416,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-parser"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "ariadne",
  "cairo-m-compiler-diagnostics",
@@ -445,7 +434,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-semantic"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "ariadne",
  "bitflags",
@@ -468,7 +457,18 @@ dependencies = [
 [[package]]
 name = "cairo-m-runner"
 version = "0.1.1"
-source = "git+https://github.com/kkrt-labs/cairo-m?branch=oba%2Frunner-lib#32025e015325bad407dc1c399f5d3b865dd7e178"
+dependencies = [
+ "cairo-m-compiler",
+ "cairo-m-runner 0.1.1 (git+https://github.com/kkrt-labs/cairo-m)",
+ "sonic-rs 0.5.1",
+ "thiserror 2.0.12",
+ "uniffi",
+]
+
+[[package]]
+name = "cairo-m-runner"
+version = "0.1.1"
+source = "git+https://github.com/kkrt-labs/cairo-m#240dc652a605fc4781cf70597a52e378a0f801e3"
 dependencies = [
  "cairo-m-compiler",
  "clap",
@@ -2048,7 +2048,7 @@ dependencies = [
 
 [[package]]
 name = "uniffi-bindgen"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "uniffi",
 ]

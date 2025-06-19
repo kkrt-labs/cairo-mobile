@@ -8,7 +8,8 @@ permissions:
 
 # Add concurrency to cancel previous runs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group:
+    ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 on:
@@ -42,7 +43,9 @@ jobs:
         run: npm ci
 
       - name: Run EAS Local Android Build (Preview Profile)
-        run: eas build --local --platform android --profile preview --non-interactive --output ${{ github.workspace }}/app-release.apk
+        run:
+          eas build --local --platform android --profile preview
+          --non-interactive --output ${{ github.workspace }}/app-release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -77,7 +80,9 @@ jobs:
         run: npm ci
 
       - name: Run EAS Local iOS Build (Preview Profile)
-        run: eas build --local --platform ios --profile preview --non-interactive --output ${{ github.workspace }}/app-release.ipa
+        run:
+          eas build --local --platform ios --profile preview --non-interactive
+          --output ${{ github.workspace }}/app-release.ipa
 
       - name: Indicate iOS Build Success
         run: echo "✅ iOS (device) local build successful!"
