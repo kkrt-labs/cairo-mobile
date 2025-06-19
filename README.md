@@ -10,14 +10,14 @@ A React Native app using Expo using [Cairo M](https://github.com/kkrt-labs/cairo
   - It is recommended to use a version manager such as [nvm](https://github.com/nvm-sh/nvm).
 - [Android Studio](https://developer.android.com/studio)
 - [XCode](https://developer.apple.com/xcode/) (if targetting iOS)
-  - [CocoaPods](https://guides.cocoapods.org/using/getting-started.html#installation) (CocoaPods recommends not using the macOS system version of ruby)
+  - [CocoaPods](https://guides.cocoapods.org/using/getting-started.html#installation)
 
 ### Setup
 
 1. Clone the repository
 
 ```bash
-git clone https://github.com/kkrt-labs/zink.git
+git clone https://github.com/kkrt-labs/cairo-mobile.git
 cd cairo-mobile
 ```
 
