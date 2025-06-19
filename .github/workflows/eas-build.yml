@@ -1,0 +1,89 @@
+# .github/workflows/eas-build.yml
+# Thank you to https://github.com/thomasread99/expo-workflows for the inspiration!
+
+name: Local EAS Build PR Check
+
+permissions:
+  contents: read
+
+# Add concurrency to cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  android_build:
+    name: Android Local Build (Preview)
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run EAS Local Android Build (Preview Profile)
+        run: eas build --local --platform android --profile preview --non-interactive --output ${{ github.workspace }}/app-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-preview-android
+          path: ${{ github.workspace }}/app-release.apk
+
+      - name: Indicate Android Build Success
+        run: echo "✅ Android local build successful!"
+
+  ios_simulator_build:
+    name: iOS Simulator Local Build (Preview)
+    runs-on: macos-15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Run EAS Local iOS Build (Preview Profile)
+        run: eas build --local --platform ios --profile preview --non-interactive --output ${{ github.workspace }}/app-release.ipa
+
+      - name: Indicate iOS Build Success
+        run: echo "✅ iOS (device) local build successful!"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-preview-ios
+          path: ${{ github.workspace }}/app-release.ipa
