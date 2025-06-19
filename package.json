@@ -1,0 +1,24 @@
+{
+  "name": "cairo-mobile",
+  "version": "1.0.0",
+  "main": "app/index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios-sim": "expo run:ios",
+    "ios-device": "expo run:ios --device"
+  },
+  "dependencies": {
+    "expo": "~53.0.12",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.1.0",
+    "react-native": "0.79.4",
+    "expo-system-ui": "~5.0.9"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}
