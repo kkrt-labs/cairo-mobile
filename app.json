@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "cairo-mobile",
+    "slug": "cairo-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "cairomobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.kakarot.cairo-mobile",
+      "appleTeamId": "3767P43YCA"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "org.kakarot.cairo_mobile"
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b06a7ffa-d764-4c04-abf2-ffb7999164ae"
+      }
+    },
+    "owner": "kkrt-labs"
+  }
+}
