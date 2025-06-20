@@ -22,7 +22,7 @@ const ANDROID_TARGETS = [
   {
     arch: "aarch64-linux-android",
     jniLibsSubdir: "arm64-v8a",
-    libName: "libcairo_m_runner.dylib",
+    libName: "libcairo_m_runner.so",
   },
 ];
 
@@ -243,7 +243,6 @@ async function setupAndroidPlatform(rustTarget) {
     "jniLibs",
     rustTarget.jniLibsSubdir,
   );
-  await copyFile(libraryPath, path.join(androidJniDir, rustTarget.libName));
 
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "android", "build.gradle"),
@@ -312,7 +311,6 @@ async function setupIOSPlatform(rustTarget) {
   // For simplicity, let's assume the Podspec points to a generic name and we overwrite it
   // or that the user manages which .a file to use (e.g. via XCode build settings or a universal binary step)
   // For this script, we'll just copy the latest one built to the standard name.
-  await copyFile(libraryPath, path.join(iosRustLibDir, `libcairo_m.a`));
 
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),
