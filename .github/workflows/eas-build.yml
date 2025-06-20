@@ -20,7 +20,7 @@ on:
 jobs:
   android_build:
     name: Android Local Build (Preview)
-    runs-on: macos-15
+    runs-on: macos-15-xlarge
 
     steps:
       - name: Checkout code
@@ -61,7 +61,7 @@ jobs:
 
   ios_simulator_build:
     name: iOS Device Local Build (Preview)
-    runs-on: macos-15
+    runs-on: macos-15-xlarge
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
