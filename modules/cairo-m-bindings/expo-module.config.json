@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["CairoMBindingsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.cairo-m-bindings.CairoMBindingsModule"]
+  }
+}

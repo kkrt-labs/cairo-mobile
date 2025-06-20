@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios-sim": "expo run:ios",
-    "ios-device": "expo run:ios --device"
+    "ios-device": "expo run:ios --device",
+    "generate-bindings": "node scripts/setup_rust_bindings.mjs --all",
+    "eas-build-pre-install": "./eas-hooks/01-install-rust-tools.sh",
+    "eas-build-post-install": "./eas-hooks/02-run-bindings-script.sh"
   },
   "dependencies": {
     "expo": "~53.0.12",
