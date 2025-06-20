@@ -96,7 +96,6 @@ mod tests {
         let _cleanup = FileCleanup(&["memory.bin", "trace.bin"]);
         let file_content = fs::read_to_string("test_data/fibonacci.json").unwrap();
         let result = run_program(file_content).unwrap();
-        println!("result: {:?}", result);
         assert_eq!(result.return_value, 55);
     }
 }
