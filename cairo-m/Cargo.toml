@@ -1,0 +1,14 @@
+[workspace]
+members = ["bindgen", "runner"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.1"
+edition = "2021"
+
+[workspace.dependencies]
+cairo-m-runner = { git = "https://github.com/kkrt-labs/cairo-m" }
+cairo-m-compiler = { git = "https://github.com/kkrt-labs/cairo-m" }
+thiserror = "2.0.12"
+sonic-rs = "0.5.1"
+uniffi = { version = "0.29.3", features = ["cli"] }

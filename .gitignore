@@ -42,3 +42,8 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+target/
+out/
+
+.expo/
