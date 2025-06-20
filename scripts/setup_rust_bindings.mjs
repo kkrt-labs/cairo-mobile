@@ -234,16 +234,6 @@ async function setupAndroidPlatform(rustTarget) {
   );
   console.log("Kotlin bindings generated directly to module.");
 
-  console.log("Copying Android library to cairo-m module");
-  const androidJniDir = path.join(
-    EXPO_MODULE_DIR,
-    "android",
-    "src",
-    "main",
-    "jniLibs",
-    rustTarget.jniLibsSubdir,
-  );
-
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "android", "build.gradle"),
     "net.java.dev.jna:jna",
@@ -280,6 +270,12 @@ async function setupIOSPlatform(rustTarget) {
   const iosRustSwiftDir = path.join(EXPO_MODULE_DIR, "ios", "rust", "swift");
   await ensureDir(iosRustSwiftDir);
 
+  // NOTE: Bindings are not universal for simulator and device.
+  // For now, we'll just copy the specific target's .a file.
+  // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
+  // The Podspec would need to be adjusted or use a universal binary.
+  // For simplicity, let's assume the Podspec points to a generic name and we overwrite it
+  // or that the user manages which .a file to use (e.g. via XCode build settings or a universal binary step)
   await executeCommand(
     "cargo",
     [
@@ -297,20 +293,6 @@ async function setupIOSPlatform(rustTarget) {
     { cwd: RUST_PROJECT_DIR },
   );
   console.log("Swift bindings generated directly to module.");
-
-  console.log("Copying iOS library to cairo-m module");
-  const iosRustLibDir = path.join(EXPO_MODULE_DIR, "ios", "rust");
-
-  // For now, we'll just copy the specific target's .a file.
-  // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
-  await copyFile(
-    libraryPath,
-    path.join(iosRustLibDir, `libcairo_m_${rustTarget.type}.a`),
-  ); // Distinguish by type for now
-  // The Podspec would need to be adjusted or use a universal binary.
-  // For simplicity, let's assume the Podspec points to a generic name and we overwrite it
-  // or that the user manages which .a file to use (e.g. via XCode build settings or a universal binary step)
-  // For this script, we'll just copy the latest one built to the standard name.
 
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),
