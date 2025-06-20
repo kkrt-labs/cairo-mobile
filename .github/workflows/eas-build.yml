@@ -18,13 +18,38 @@ on:
       - main
 
 jobs:
-  android_build:
-    name: Android Local Build (Preview)
+  build:
+    name:
+      ${{ matrix.platform == 'android' && 'Android' || 'iOS device' }} Local
+      Build (Preview)
     runs-on: macos-15
+
+    strategy:
+      matrix:
+        platform: [android, ios]
+        include:
+          - platform: android
+            artifact-name: app-preview-android
+            output-file: app-release.apk
+            build-command:
+              eas build --local --platform android --profile preview
+              --non-interactive --output ${{ github.workspace }}/app-release.apk
+            success-message: "✅ Android local build successful!"
+          - platform: ios
+            artifact-name: app-preview-ios
+            output-file: app-release.ipa
+            build-command:
+              eas build --local --platform ios --profile preview
+              --non-interactive --output ${{ github.workspace }}/app-release.ipa
+            success-message: "✅ iOS (device) local build successful!"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup lld linker (iOS only)
+        if: matrix.platform == 'ios'
+        run: brew install lld
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -42,56 +67,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run EAS Local Android Build (Preview Profile)
-        run:
-          eas build --local --platform android --profile preview
-          --non-interactive --output ${{ github.workspace }}/app-release.apk
+      - name: Run EAS Local Build (Preview Profile)
+        run: ${{ matrix.build-command }}
 
-      - name: Upload APK artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-preview-android
-          path: ${{ github.workspace }}/app-release.apk
+          name: ${{ matrix.artifact-name }}
+          path: ${{ github.workspace }}/${{ matrix.output-file }}
 
-      - name: Indicate Android Build Success
-        run: echo "✅ Android local build successful!"
-
-  ios_simulator_build:
-    name: iOS Simulator Local Build (Preview)
-    runs-on: macos-15
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup lld linker
-        run: brew install lld
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install Project Dependencies
-        run: npm ci
-
-      - name: Run EAS Local iOS Build (Preview Profile)
-        run:
-          eas build --local --platform ios --profile preview --non-interactive
-          --output ${{ github.workspace }}/app-release.ipa
-
-      - name: Indicate iOS Build Success
-        run: echo "✅ iOS (device) local build successful!"
-
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-preview-ios
-          path: ${{ github.workspace }}/app-release.ipa
+      - name: Indicate Build Success
+        run: echo "${{ matrix.success-message }}"
