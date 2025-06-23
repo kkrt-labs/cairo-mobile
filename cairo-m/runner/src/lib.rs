@@ -5,12 +5,12 @@ use cairo_m_compiler::CompiledProgram;
 /// Represents the possible errors that can occur in the mobile VM.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum MobileVmError {
-    #[error("VM Error: {message}")]
-    Vm { message: String },
-    #[error("IO Error: {message}")]
-    Io { message: String },
-    #[error("JSON parsing error: {message}")]
-    Json { message: String },
+    #[error("VM Error: {0}")]
+    Vm(String),
+    #[error("IO Error: {0}")]
+    Io(String),
+    #[error("JSON parsing error: {0}")]
+    Json(String),
 }
 
 /// The result of a successful program execution.
@@ -47,27 +47,19 @@ pub struct RunResult {
 fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
     let overall_start = std::time::Instant::now();
     let compiled_program: CompiledProgram =
-        sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json {
-            message: e.to_string(),
-        })?;
+        sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json(e.to_string()))?;
 
     let output = cairo_m_runner::run_cairo_program(&compiled_program, "main", Default::default())
-        .map_err(|e| MobileVmError::Vm {
-        message: e.to_string(),
-    })?;
+        .map_err(|e| MobileVmError::Vm(e.to_string()))?;
 
-    output
-        .vm
-        .write_binary_trace("trace.bin")
-        .map_err(|e| MobileVmError::Io {
-            message: e.to_string(),
-        })?;
-    output
-        .vm
-        .write_binary_memory_trace("memory.bin")
-        .map_err(|e| MobileVmError::Io {
-            message: e.to_string(),
-        })?;
+    // output
+    //     .vm
+    //     .write_binary_trace("trace.bin")
+    //     .map_err(|e| MobileVmError::Io(e.to_string()))?;
+    // output
+    //     .vm
+    //     .write_binary_memory_trace("memory.bin")
+    //     .map_err(|e| MobileVmError::Io(e.to_string()))?;
     let overall_duration = overall_start.elapsed();
 
     let num_steps = output.vm.trace.len() as f64;

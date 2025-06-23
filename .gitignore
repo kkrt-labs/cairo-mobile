@@ -5,7 +5,7 @@ node_modules/
 
 # === Local Expo Module (modules) ===
 # This section assumes that the compiled Rust libraries and generated bindings
-# inside 'modules/cairo-m-bindings' are created by 'setup_rust_bindings.mjs'
+# inside 'modules/cairombindings' are created by 'setup_rust_bindings.mjs'
 # and should not be committed to the repository.
 
 # Android specific build artifacts for the module

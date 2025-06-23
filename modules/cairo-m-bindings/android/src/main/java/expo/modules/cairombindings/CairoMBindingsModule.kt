@@ -1,4 +1,4 @@
-package expo.modules.cairo-m-bindings
+package expo.modules.cairombindings
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -14,21 +14,21 @@ import uniffi.cairo_m_runner.RunResult as UniFFIRunResult
 // This is the data class that Expo Modules Kotlin will recognize and marshal.
 // It must implement `Record` and its fields should be marked with `@Field`.
 data class ExpoRunResult(
-    @Field val returnValue: Number,
-    @Field val frequency: Number,
+    @Field val returnValue: Double,
+    @Field val frequency: Double,
 ) : Record
 
 // Extension functions to easily convert between the two types
 fun UniFFIRunResult.toExpoRunResult(): ExpoRunResult {
     return ExpoRunResult(
-        returnValue = this.returnValue,
+        returnValue = this.returnValue.toDouble(),
         frequency = this.frequency
     )
 }
 
 fun ExpoRunResult.toUniFFIRunResult(): UniFFIRunResult {
     return UniFFIRunResult(
-        returnValue = this.returnValue,
+        returnValue = this.returnValue.toUInt(),
         frequency = this.frequency
     )
 }

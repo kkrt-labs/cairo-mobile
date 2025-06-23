@@ -4,6 +4,6 @@
     "modules": ["CairoMBindingsModule"]
   },
   "android": {
-    "modules": ["expo.modules.cairo-m-bindings.CairoMBindingsModule"]
+    "modules": ["expo.modules.cairombindings.CairoMBindingsModule"]
   }
 }

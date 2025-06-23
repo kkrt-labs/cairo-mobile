@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 
-group = 'expo.modules.cairo-m-bindings'
+group = 'expo.modules.cairombindings'
 version = '0.7.2'
 
 def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
@@ -36,7 +36,7 @@ dependencies {
 }
 
 android {
-  namespace "expo.modules.cairo-m-bindings"
+  namespace "expo.modules.cairombindings"
   defaultConfig {
     versionCode 1
     versionName "0.7.2"

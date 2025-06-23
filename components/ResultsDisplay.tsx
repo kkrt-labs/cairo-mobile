@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { typography } from "./styles/typography";
 import { Accordion } from "./Accordion";
+import { formatFrequency } from "./utils/computation";
 
 export interface RunResult {
   returnValue: number;
@@ -54,7 +55,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         {showRun && (
           <Accordion title="Run Results" defaultExpanded={true}>
             <ResultItem label="Result" value={result.run.returnValue} />
-            <ResultItem label="Frequency" value={result.run.frequency} />
+            <ResultItem
+              label="Frequency"
+              value={formatFrequency(result.run.frequency)}
+            />
           </Accordion>
         )}
 

@@ -234,6 +234,17 @@ async function setupAndroidPlatform(rustTarget) {
   );
   console.log("Kotlin bindings generated directly to module.");
 
+  console.log("Copying Android artifacts to zk-bindings module");
+  const androidJniDir = path.join(
+    EXPO_MODULE_DIR,
+    "android",
+    "src",
+    "main",
+    "jniLibs",
+    rustTarget.jniLibsSubdir,
+  );
+  await copyFile(libraryPath, path.join(androidJniDir, rustTarget.libName));
+
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "android", "build.gradle"),
     "net.java.dev.jna:jna",
@@ -293,6 +304,11 @@ async function setupIOSPlatform(rustTarget) {
     { cwd: RUST_PROJECT_DIR },
   );
   console.log("Swift bindings generated directly to module.");
+
+  // For now, we'll just copy the specific target's .a file.
+  // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
+  const iosRustLibDir = path.join(EXPO_MODULE_DIR, "ios", "rust");
+  await copyFile(libraryPath, path.join(iosRustLibDir, `libcairo_m_runner.a`)); // Distinguish by type for now
 
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),

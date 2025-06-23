@@ -12,7 +12,7 @@ public class CairoMBindingsModule: Module {
 
     AsyncFunction("runProgram") { (programJsonStr: String) -> [String: Any] in
       do {
-        let result = try runProgram(programJsonStr: programJsonStr)
+        let result = try runProgram(fileContent: programJsonStr)
         return ["returnValue": result.returnValue, "frequency": result.frequency]
       } catch {
         throw NSError(domain: "CairoMBindings", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to run program: \(error.localizedDescription)"])
