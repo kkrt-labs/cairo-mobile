@@ -13,6 +13,7 @@ import {
   QueryClient,
   QueryClientProvider,
   useMutation,
+  UseMutationResult,
 } from "@tanstack/react-query";
 
 // Components
@@ -22,16 +23,12 @@ import { ActionButtons } from "../components/ActionButtons";
 import {
   ResultsDisplay,
   ComputationResult,
+  RunResult,
 } from "../components/ResultsDisplay";
 
 // Data and Utils
 import { Programs } from "../components/data/constants";
-
 import CairoMBindings from "@modules/cairo-m-bindings";
-
-const fibCircuit = require("../assets/cairo-m/fib.json");
-
-// TODO: Remove once cairo-m native module is implemented
 import {
   generateFibonacciProof,
   verifyFibonacciProof,
@@ -40,6 +37,19 @@ import {
 // Styles
 import { colors } from "../components/styles/colors";
 import { typography } from "../components/styles/typography";
+
+// Constants
+const fibCircuit = require("../assets/cairo-m/fib.json");
+
+// Types
+type MutationType = "run" | "proof" | "verify";
+
+interface AppState {
+  inputValue: string;
+  selectedProgram: Program;
+  lastMutation: MutationType | null;
+  computationResult: ComputationResult | null;
+}
 
 // Create a client
 const queryClient = new QueryClient({
@@ -54,25 +64,20 @@ const queryClient = new QueryClient({
   },
 });
 
-type MutationType = "run" | "proof" | "verify";
-
-function AppContent() {
-  const [inputValue, setInputValue] = useState<string>("");
-  const [selectedProgram, setSelectedProgram] = useState<Program>("fibonacci");
-  const [lastMutation, setLastMutation] = useState<MutationType | null>(null);
-  const [computationResult, setComputationResult] =
-    useState<ComputationResult | null>(null);
-
-  // Mutation for running computation
+// Custom hook for managing computation mutations
+const useComputationMutations = (
+  state: AppState,
+  setState: (updates: Partial<AppState>) => void,
+) => {
   const runComputationMutation = useMutation({
-    mutationFn: async () => {
-      const numValue = parseInt(inputValue, 10);
+    mutationFn: async (): Promise<RunResult> => {
+      const numValue = parseInt(state.inputValue, 10);
 
       if (isNaN(numValue) || numValue <= 0) {
         throw new Error("Invalid input: Please enter a positive number");
       }
 
-      if (selectedProgram === "fibonacci") {
+      if (state.selectedProgram === "fibonacci") {
         const runResult = await CairoMBindings.runProgram(
           JSON.stringify(fibCircuit),
         );
@@ -82,92 +87,146 @@ function AppContent() {
       throw new Error("Unsupported program type");
     },
     onSuccess: (data) => {
-      setLastMutation("run");
-      setComputationResult({
-        run: data,
-        proof: undefined,
-        verification: undefined,
+      setState({
+        lastMutation: "run",
+        computationResult: {
+          run: data,
+          proof: undefined,
+          verification: undefined,
+        },
       });
     },
     onError: (error) => {
       console.error("Run computation error:", error);
-      setComputationResult(null);
+      setState({ computationResult: null });
     },
   });
 
-  // Mutation for generating proof
   const generateProofMutation = useMutation({
     mutationFn: async () => {
-      if (!computationResult?.run) {
+      if (!state.computationResult?.run) {
         throw new Error("No computation result available for proof generation");
       }
 
-      const numValue = parseInt(inputValue, 10);
+      const numValue = parseInt(state.inputValue, 10);
       return generateFibonacciProof(
         numValue,
-        computationResult.run.returnValue,
+        state.computationResult.run.returnValue,
       );
     },
     onSuccess: (data) => {
-      setLastMutation("proof");
-      setComputationResult((prev) => (prev ? { ...prev, proof: data } : null));
+      setState({
+        lastMutation: "proof",
+        computationResult: state.computationResult
+          ? { ...state.computationResult, proof: data }
+          : null,
+      });
     },
     onError: (error) => {
       console.error("Generate proof error:", error);
     },
   });
 
-  // Mutation for verifying proof
   const verifyProofMutation = useMutation({
     mutationFn: async () => {
-      if (!computationResult?.run) {
+      if (!state.computationResult?.run) {
         throw new Error("No computation result available for verification");
       }
 
-      return verifyFibonacciProof(computationResult.run.returnValue);
+      return verifyFibonacciProof(state.computationResult.run.returnValue);
     },
     onSuccess: (data) => {
-      setLastMutation("verify");
-      setComputationResult((prev) =>
-        prev ? { ...prev, verification: data } : null,
-      );
+      setState({
+        lastMutation: "verify",
+        computationResult: state.computationResult
+          ? { ...state.computationResult, verification: data }
+          : null,
+      });
     },
     onError: (error) => {
       console.error("Verify proof error:", error);
     },
   });
 
-  const handleRunComputation = () => {
-    runComputationMutation.mutate();
+  return {
+    runComputationMutation,
+    generateProofMutation,
+    verifyProofMutation,
+  };
+};
+
+// Custom hook for managing app state
+const useAppState = () => {
+  const [state, setStateInternal] = useState<AppState>({
+    inputValue: "",
+    selectedProgram: "fibonacci",
+    lastMutation: null,
+    computationResult: null,
+  });
+
+  const setState = (updates: Partial<AppState>) => {
+    setStateInternal((prev) => ({ ...prev, ...updates }));
   };
 
-  const handleGenerateProof = () => {
-    generateProofMutation.mutate();
-  };
-
-  const handleVerifyProof = () => {
-    verifyProofMutation.mutate();
-  };
-
-  const currentProgramAvailable =
-    Programs.find((p) => p.type === selectedProgram)?.available ?? false;
-
-  // Update input when program changes
-  const handleProgramSelect = (program: Program) => {
-    setSelectedProgram(program);
-    setComputationResult(null); // Clear results when switching programs
-    setLastMutation(null); // Clear last mutation state
+  const handleProgramSelect = (
+    program: Program,
+    mutations: {
+      runComputationMutation: UseMutationResult<any, Error, void, unknown>;
+      generateProofMutation: UseMutationResult<any, Error, void, unknown>;
+      verifyProofMutation: UseMutationResult<any, Error, void, unknown>;
+    },
+  ) => {
+    setState({
+      selectedProgram: program,
+      inputValue: program === "fibonacci" ? "" : state.inputValue,
+      computationResult: null,
+      lastMutation: null,
+    });
 
     // Reset mutations when switching programs
-    runComputationMutation.reset();
-    generateProofMutation.reset();
-    verifyProofMutation.reset();
-
-    // Reset to default value when switching programs
-    if (program === "fibonacci") {
-      setInputValue("");
-    }
+    mutations.runComputationMutation.reset();
+    mutations.generateProofMutation.reset();
+    mutations.verifyProofMutation.reset();
   };
+
+  return {
+    state,
+    setState,
+    handleProgramSelect,
+  };
+};
+
+// Custom hook for error handling
+const useErrorHandling = (mutations: {
+  runComputationMutation: UseMutationResult<any, Error, void, unknown>;
+  generateProofMutation: UseMutationResult<any, Error, void, unknown>;
+  verifyProofMutation: UseMutationResult<any, Error, void, unknown>;
+}) => {
+  const errorMessage =
+    mutations.runComputationMutation.error?.message ||
+    mutations.generateProofMutation.error?.message ||
+    mutations.verifyProofMutation.error?.message ||
+    null;
+
+  const hasError = !!(
+    mutations.runComputationMutation.error ||
+    mutations.generateProofMutation.error ||
+    mutations.verifyProofMutation.error
+  );
+
+  return { errorMessage, hasError };
+};
+
+function AppContent() {
+  const { state, setState, handleProgramSelect } = useAppState();
+  const mutations = useComputationMutations(state, setState);
+  const { errorMessage, hasError } = useErrorHandling(mutations);
+
+  const { runComputationMutation, generateProofMutation, verifyProofMutation } =
+    mutations;
+
+  const currentProgramAvailable =
+    Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
 
   return (
     <SafeAreaProvider>
@@ -186,56 +245,52 @@ function AppContent() {
         >
           {/* Program Selection */}
           <ProgramDropdown
-            selectedProgram={selectedProgram}
-            onProgramSelect={handleProgramSelect}
+            selectedProgram={state.selectedProgram}
+            onProgramSelect={(program) =>
+              handleProgramSelect(program, mutations)
+            }
             Programs={Programs}
           />
 
           {/* Number Input - Only show if fibonacci is selected and available */}
-          {selectedProgram === "fibonacci" && currentProgramAvailable && (
+          {state.selectedProgram === "fibonacci" && currentProgramAvailable && (
             <NumberInput
-              value={inputValue}
-              onValueChange={setInputValue}
+              value={state.inputValue}
+              onValueChange={(value) => setState({ inputValue: value })}
               placeholder="Enter fibonacci term"
             />
           )}
 
           {/* Action Buttons */}
           <ActionButtons
-            onRun={handleRunComputation}
-            onGenerateProof={handleGenerateProof}
-            onVerifyProof={handleVerifyProof}
+            onRun={runComputationMutation.mutate}
+            onGenerateProof={generateProofMutation.mutate}
+            onVerifyProof={verifyProofMutation.mutate}
             isRunDisabled={
               !currentProgramAvailable || runComputationMutation.isPending
             }
             isProofDisabled={
-              !computationResult?.run || generateProofMutation.isPending
+              !state.computationResult?.run || generateProofMutation.isPending
             }
             isVerifyDisabled={
-              !computationResult?.proof || verifyProofMutation.isPending
+              !state.computationResult?.proof || verifyProofMutation.isPending
             }
           />
 
           {/* Error Display */}
-          {(runComputationMutation.error ||
-            generateProofMutation.error ||
-            verifyProofMutation.error) && (
+          {hasError && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                {runComputationMutation.error?.message ||
-                  generateProofMutation.error?.message ||
-                  verifyProofMutation.error?.message}
-              </Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           )}
 
           {/* Results - Only show if we have results and program is available */}
-          {currentProgramAvailable && computationResult && (
+          {currentProgramAvailable && state.computationResult && (
             <ResultsDisplay
-              result={computationResult}
-              showRun={!!computationResult.run}
-              showProof={!!computationResult.proof}
-              showVerification={!!computationResult.verification}
+              result={state.computationResult}
+              showRun={!!state.computationResult.run}
+              showProof={!!state.computationResult.proof}
+              showVerification={!!state.computationResult.verification}
             />
           )}
         </ScrollView>
@@ -279,7 +334,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     gap: 24,
-    paddingBottom: 24, // Add bottom padding for better scrolling
+    paddingBottom: 24,
   },
   errorContainer: {
     backgroundColor: "#ffebee",
