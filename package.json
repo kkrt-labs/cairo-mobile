@@ -12,11 +12,16 @@
     "eas-build-post-install": "./eas-hooks/02-run-bindings-script.sh"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.1",
     "expo": "~53.0.12",
+    "expo-font": "^13.3.1",
     "expo-status-bar": "~2.2.3",
-    "react": "19.1.0",
+    "expo-system-ui": "~5.0.9",
+    "react": "19.0.0",
     "react-native": "0.79.4",
-    "expo-system-ui": "~5.0.9"
+    "react-native-paper": "^5.14.5",
+    "react-native-safe-area-context": "^5.4.1",
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
