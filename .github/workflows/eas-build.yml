@@ -20,11 +20,14 @@ on:
 jobs:
   android_build:
     name: Android Local Build (Preview)
-    runs-on: macos-15
+    runs-on: macos-15-xlarge
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup lld linker
+        run: brew install lld
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -57,11 +60,14 @@ jobs:
         run: echo "✅ Android local build successful!"
 
   ios_simulator_build:
-    name: iOS Simulator Local Build (Preview)
-    runs-on: macos-15
+    name: iOS Device Local Build (Preview)
+    runs-on: macos-15-xlarge
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup lld linker
+        run: brew install lld
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

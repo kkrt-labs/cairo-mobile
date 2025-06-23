@@ -14,14 +14,15 @@ pub enum MobileVmError {
 }
 
 /// The result of a successful program execution.
+///
+/// # Fields
+///
+/// * `return_value` - The return value of the program
+/// * `frequency` - The frequency of the trace generation, in Hz
 #[derive(Debug, uniffi::Record)]
 pub struct RunResult {
     pub return_value: u32,
-    pub steps_per_second_execution: f64,
-    pub steps_per_second_e2e: f64,
-    pub execution_duration: f64,
-    pub trace_generation_duration: f64,
-    pub overall_duration: f64,
+    pub frequency: f64,
 }
 
 /// Runs a compiled Cairo program and returns the result and execution metrics.
@@ -50,14 +51,11 @@ fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
             message: e.to_string(),
         })?;
 
-    let execution_start = std::time::Instant::now();
     let output = cairo_m_runner::run_cairo_program(&compiled_program, "main", Default::default())
         .map_err(|e| MobileVmError::Vm {
         message: e.to_string(),
     })?;
-    let execution_duration = execution_start.elapsed();
 
-    let trace_generation_start = std::time::Instant::now();
     output
         .vm
         .write_binary_trace("trace.bin")
@@ -70,20 +68,14 @@ fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
         .map_err(|e| MobileVmError::Io {
             message: e.to_string(),
         })?;
-    let trace_generation_duration = trace_generation_start.elapsed();
     let overall_duration = overall_start.elapsed();
 
     let num_steps = output.vm.trace.len() as f64;
-    let steps_per_second_execution = num_steps / execution_duration.as_secs_f64();
-    let steps_per_second_e2e = num_steps / overall_duration.as_secs_f64();
+    let frequency = num_steps / overall_duration.as_secs_f64();
 
     Ok(RunResult {
         return_value: output.return_value,
-        steps_per_second_execution,
-        steps_per_second_e2e,
-        execution_duration: execution_duration.as_secs_f64(),
-        trace_generation_duration: trace_generation_duration.as_secs_f64(),
-        overall_duration: overall_duration.as_secs_f64(),
+        frequency,
     })
 }
 
