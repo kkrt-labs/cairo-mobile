@@ -39,11 +39,6 @@ function AppContent() {
   const [inputValue, setInputValue] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<Program>("fibonacci");
 
-  // Progressive workflow states
-  const [hasRun, setHasRun] = useState<boolean>(false);
-  const [hasProof, setHasProof] = useState<boolean>(false);
-  const [hasVerification, setHasVerification] = useState<boolean>(false);
-
   const handleRunComputation = () => {
     // TODO: Update once cairo-m native module is implemented
     const numValue = parseInt(inputValue, 10);
@@ -60,9 +55,6 @@ function AppContent() {
         proof: undefined,
         verification: undefined,
       });
-      setHasRun(true);
-      setHasProof(false);
-      setHasVerification(false);
     }
   };
 
@@ -73,15 +65,8 @@ function AppContent() {
         computationResult.run.result,
       );
       setComputationResult((prev) =>
-        prev
-          ? {
-              ...prev,
-              proof: proofResult,
-            }
-          : null,
+        prev ? { ...prev, proof: proofResult } : null,
       );
-      setHasProof(true);
-      setHasVerification(false);
     }
   };
 
@@ -91,14 +76,8 @@ function AppContent() {
         computationResult.run.result,
       );
       setComputationResult((prev) =>
-        prev
-          ? {
-              ...prev,
-              verification: verificationResult,
-            }
-          : null,
+        prev ? { ...prev, verification: verificationResult } : null,
       );
-      setHasVerification(true);
     }
   };
 
@@ -109,9 +88,6 @@ function AppContent() {
   const handleProgramSelect = (program: Program) => {
     setSelectedProgram(program);
     setComputationResult(null); // Clear results when switching programs
-    setHasRun(false);
-    setHasProof(false);
-    setHasVerification(false);
 
     // Reset to default value when switching programs
     if (program === "fibonacci") {
@@ -156,17 +132,17 @@ function AppContent() {
             onGenerateProof={handleGenerateProof}
             onVerifyProof={handleVerifyProof}
             isRunDisabled={!currentProgramAvailable}
-            isProofDisabled={!hasRun}
-            isVerifyDisabled={!hasProof}
+            isProofDisabled={!computationResult?.run}
+            isVerifyDisabled={!computationResult?.proof}
           />
 
           {/* Results - Only show if we have results and program is available */}
           {currentProgramAvailable && computationResult && (
             <ResultsDisplay
               result={computationResult}
-              showRun={hasRun}
-              showProof={hasProof}
-              showVerification={hasVerification}
+              showRun={!!computationResult.run}
+              showProof={!!computationResult.proof}
+              showVerification={!!computationResult.verification}
             />
           )}
         </ScrollView>
