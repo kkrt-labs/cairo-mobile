@@ -18,11 +18,16 @@ import {
   ResultsDisplay,
   ComputationResult,
 } from "../components/ResultsDisplay";
-import { ComingSoon } from "../components/ComingSoon";
 
 // Data and Utils
-// TODO: Remove once cairo-m native module is implemented
 import { Programs } from "../components/data/constants";
+
+import CairoMBindings from "cairo-m-bindings";
+import { RunResult } from "cairo-m-bindings/src/CairoMBindings.types";
+
+const fibCircuit = require("../assets/cairo-m/fib.json");
+
+// TODO: Remove once cairo-m native module is implemented
 import {
   getFibonacciRunResult,
   generateFibonacciProof,
@@ -39,7 +44,7 @@ function AppContent() {
   const [inputValue, setInputValue] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<Program>("fibonacci");
 
-  const handleRunComputation = () => {
+  const handleRunComputation = async () => {
     // TODO: Update once cairo-m native module is implemented
     const numValue = parseInt(inputValue, 10);
 
@@ -49,7 +54,9 @@ function AppContent() {
     }
 
     if (selectedProgram === "fibonacci") {
-      const runResult = getFibonacciRunResult(numValue);
+      const runResult = await CairoMBindings.runProgram(
+        JSON.stringify(fibCircuit),
+      );
       setComputationResult({
         run: runResult,
         proof: undefined,
@@ -62,7 +69,7 @@ function AppContent() {
     if (computationResult?.run) {
       const proofResult = generateFibonacciProof(
         parseInt(inputValue, 10),
-        computationResult.run.result,
+        computationResult.run.returnValue,
       );
       setComputationResult((prev) =>
         prev ? { ...prev, proof: proofResult } : null,
@@ -73,7 +80,7 @@ function AppContent() {
   const handleVerifyProof = () => {
     if (computationResult?.run) {
       const verificationResult = verifyFibonacciProof(
-        computationResult.run.result,
+        computationResult.run.returnValue,
       );
       setComputationResult((prev) =>
         prev ? { ...prev, verification: verificationResult } : null,

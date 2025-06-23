@@ -4,8 +4,8 @@ import { typography } from "./styles/typography";
 import { Accordion } from "./Accordion";
 
 export interface RunResult {
-  result: number;
-  traceGenerationSpeed: string; // in MHz
+  returnValue: number;
+  frequency: number;
 }
 
 export interface ProofResult {
@@ -53,11 +53,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         {/* Run Results */}
         {showRun && (
           <Accordion title="Run Results" defaultExpanded={true}>
-            <ResultItem label="Result" value={result.run.result} />
-            <ResultItem
-              label="Trace Generation Speed"
-              value={result.run.traceGenerationSpeed}
-            />
+            <ResultItem label="Result" value={result.run.returnValue} />
+            <ResultItem label="Frequency" value={result.run.frequency} />
           </Accordion>
         )}
 

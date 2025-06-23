@@ -3,9 +3,43 @@
 # dependencies
 node_modules/
 
+# === Local Expo Module (modules) ===
+# This section assumes that the compiled Rust libraries and generated bindings
+# inside 'modules/cairo-m-bindings' are created by 'setup_rust_bindings.mjs'
+# and should not be committed to the repository.
+
+# Android specific build artifacts for the module
+/modules/*/android/.gradle/
+/modules/*/android/local.properties
+/modules/*/android/build/
+/modules/*/android/.gradle/
+/modules/*/android/.idea/
+/modules/*/android/*.iml
+/modules/*/android/local.properties
+/modules/*/android/.cxx/ # CMake build artifacts
+/modules/*/android/.kotlin/ # Kotlin build cache
+
+# Generated/copied Rust artifacts for Android within the module
+/modules/*/android/src/main/jniLibs/
+/modules/*/android/src/main/java/uniffi/
+
+# iOS specific build artifacts for the module
+/modules/*/ios/Pods/
+/modules/*/ios/build/
+/modules/*/ios/.xcode.env.local
+/modules/*/ios/xcuserdata/
+/modules/*/ios/*.xcworkspace/contents.xcworkspacedata # User-specific workspace data
+
+# Generated/copied Rust artifacts for iOS within the module
+/modules/*/ios/rust/
+
+# Generic build folders that might appear in any module
+modules/**/build/
+modules/**/dist/ # If modules have their own JS build step
+
 # Build
-android/
-ios/
+/android/
+/ios/
 *.apk
 *.aab
 *.ipa
@@ -45,5 +79,3 @@ yarn-error.*
 
 target/
 out/
-
-.expo/
