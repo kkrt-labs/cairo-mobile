@@ -44,28 +44,28 @@ cd cairo-mobile
 npm install
 ```
 
-3.  Prebuild the native Android & iOS directories
+3. Prebuild the native Android & iOS directories
 
 ```bash
 npx expo prebuild --clean
 ```
 
-4.  **Generate Native Bindings:** This step compiles the Rust code in `cairo-m/`
-    and prepares the native modules (`cairo-m-bindings`). ⚠️ Running
-    `npm run generate-bindings` will generate ios bindings simulator, not for
-    device. For ios devices, run
-    `node scripts/setup_rust_bindings.mjs --ios-device`
+4. **Generate Native Bindings:** This step compiles the Rust code in `cairo-m/`
+   and prepares the native modules (`cairo-m-bindings`). ⚠️ Running
+   `npm run generate-bindings` will generate ios bindings simulator, not for
+   device. For ios devices, run
+   `node scripts/setup_rust_bindings.mjs --ios-device`
 
-    ```bash
-    npm run generate-bindings
-    # or specifically:
-    # node scripts/setup_rust_bindings.mjs --all
-    ```
+   ```bash
+   npm run generate-bindings
+   # or specifically:
+   # node scripts/setup_rust_bindings.mjs --all
+   ```
 
-    _You'll need to re-run this command whenever you make changes to the Rust
-    code in `cairo-m/` folder._
+   _You'll need to re-run this command whenever you make changes to the Rust
+   code in `cairo-m/` folder._
 
-5.  Run the app
+5. Run the app
 
 - **Android**: Run on Android device if connected, fallbacks to Android
   Simulator
