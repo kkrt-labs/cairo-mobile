@@ -14,6 +14,11 @@ pub enum MobileVmError {
 }
 
 /// The result of a successful program execution.
+///
+/// # Fields
+///
+/// * `return_value` - The return value of the program
+/// * `frequency` - The frequency of the trace generation, in Hz
 #[derive(Debug, uniffi::Record)]
 pub struct RunResult {
     pub return_value: u32,
