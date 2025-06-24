@@ -1,6 +1,7 @@
 uniffi::setup_scaffolding!();
 
 use cairo_m_common::Program;
+use cairo_m_runner::run_cairo_program;
 
 /// Represents the possible errors that can occur in the mobile VM.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
@@ -47,7 +48,7 @@ fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
     let compiled_program: Program =
         sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json(e.to_string()))?;
 
-    let output = cairo_m_runner::run_cairo_program(&compiled_program, "main", Default::default())
+    let output = run_cairo_program(&compiled_program, "main", Default::default())
         .map_err(|e| MobileVmError::Vm(e.to_string()))?;
 
     let overall_duration = overall_start.elapsed();
@@ -67,20 +68,8 @@ mod tests {
 
     use super::*;
 
-    /// A helper struct to clean up generated files at the end of a test.
-    struct FileCleanup(&'static [&'static str]);
-
-    impl Drop for FileCleanup {
-        fn drop(&mut self) {
-            for path in self.0 {
-                let _ = std::fs::remove_file(path);
-            }
-        }
-    }
-
     #[test]
     fn test_fibonacci_program() {
-        let _cleanup = FileCleanup(&["memory.bin", "trace.bin"]);
         let file_content = fs::read_to_string("test_data/fibonacci.json").unwrap();
         let result = run_program(file_content).unwrap();
         assert_eq!(result.return_value, 55);

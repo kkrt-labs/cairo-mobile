@@ -1,5 +1,5 @@
 [package]
-name = "cairo-m-runner"
+name = "cairo-m-bindings"
 version.workspace = true
 edition.workspace = true
 

@@ -20,5 +20,5 @@ Pod::Spec.new do |s|
   }
 
   s.source_files = "**/*.{h,m,mm,swift,hpp,cpp}"
-  s.vendored_libraries = 'rust/libcairo_m_runner.a'
+  s.vendored_libraries = 'rust/libcairo_m_bindings.a'
 end

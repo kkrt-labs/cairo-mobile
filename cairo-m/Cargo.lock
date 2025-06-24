@@ -347,6 +347,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
+name = "cairo-m-bindings"
+version = "0.1.1"
+dependencies = [
+ "cairo-m-common",
+ "cairo-m-runner",
+ "sonic-rs 0.5.1",
+ "thiserror 2.0.12",
+ "uniffi",
+]
+
+[[package]]
 name = "cairo-m-common"
 version = "0.1.0"
 source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
@@ -466,17 +477,6 @@ dependencies = [
  "salsa",
  "salsa-macros",
  "smol_str",
-]
-
-[[package]]
-name = "cairo-m-runner"
-version = "0.1.1"
-dependencies = [
- "cairo-m-common",
- "cairo-m-runner 0.1.1 (git+https://github.com/kkrt-labs/cairo-m)",
- "sonic-rs 0.5.1",
- "thiserror 2.0.12",
- "uniffi",
 ]
 
 [[package]]

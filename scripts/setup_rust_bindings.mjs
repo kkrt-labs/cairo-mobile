@@ -22,7 +22,7 @@ const ANDROID_TARGETS = [
   {
     arch: "aarch64-linux-android",
     jniLibsSubdir: "arm64-v8a",
-    libName: "libcairo_m_runner.so",
+    libName: "libcairo_m_bindings.so",
   },
 ];
 
@@ -30,9 +30,13 @@ const IOS_TARGETS = [
   {
     arch: "aarch64-apple-ios-sim",
     type: "simulator",
-    libName: "libcairo_m_runner.a",
+    libName: "libcairo_m_bindings.a",
   },
-  { arch: "aarch64-apple-ios", type: "device", libName: "libcairo_m_runner.a" },
+  {
+    arch: "aarch64-apple-ios",
+    type: "device",
+    libName: "libcairo_m_bindings.a",
+  },
   // TODO: Potentially x86_64-apple-ios for older simulators, but aarch64-apple-ios-sim covers modern ones
 ];
 
@@ -308,7 +312,10 @@ async function setupIOSPlatform(rustTarget) {
   // For now, we'll just copy the specific target's .a file.
   // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
   const iosRustLibDir = path.join(EXPO_MODULE_DIR, "ios", "rust");
-  await copyFile(libraryPath, path.join(iosRustLibDir, `libcairo_m_runner.a`)); // Distinguish by type for now
+  await copyFile(
+    libraryPath,
+    path.join(iosRustLibDir, `libcairo_m_bindings.a`),
+  ); // Distinguish by type for now
 
   await checkFileContent(
     path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),
@@ -397,7 +404,7 @@ Note:
     // This script currently overwrites libcairo_m.a with the last built target.
     // For a robust setup, you'd use `lipo` to combine device and simulator .a files.
     console.warn(
-      "⚠️ Building for iOS device. If also building for simulator, the `libcairo_m_runner.a` might be overwritten. Consider a universal binary build step.",
+      "⚠️ Building for iOS device. If also building for simulator, the `libcairo_m_bindings.a` might be overwritten. Consider a universal binary build step.",
     );
     await setupIOSPlatform(DEFAULT_IOS_DEVICE_TARGET);
   }

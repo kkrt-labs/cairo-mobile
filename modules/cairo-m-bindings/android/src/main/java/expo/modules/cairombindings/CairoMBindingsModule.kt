@@ -3,13 +3,13 @@ package expo.modules.cairombindings
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.net.URL
-import uniffi.cairo_m_runner.runProgram
+import uniffi.cairo_m_bindings.runProgram
 
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.records.Field
 
 // Import the UniFFI-generated RunResult, alias it for clarity
-import uniffi.cairo_m_runner.RunResult as UniFFIRunResult
+import uniffi.cairo_m_bindings.RunResult as UniFFIRunResult
 
 // This is the data class that Expo Modules Kotlin will recognize and marshal.
 // It must implement `Record` and its fields should be marked with `@Field`.
