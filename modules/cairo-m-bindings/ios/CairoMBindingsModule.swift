@@ -10,12 +10,24 @@ public class CairoMBindingsModule: Module {
     // The module will be accessible from `requireNativeModule('CairoMBindings')` in JavaScript.
     Name("CairoMBindings")
 
-    AsyncFunction("runProgram") { (programJsonStr: String) -> [String: Any] in
+    AsyncFunction("runAndGenerateProof") { (programJsonStr: String) -> [String: Any] in
       do {
-        let result = try runProgram(fileContent: programJsonStr)
-        return ["returnValue": result.returnValue, "frequency": result.frequency]
+        let result = try runProgram(programJsonStr: programJsonStr)
+        return [
+          "returnValue": result.returnValue,
+          "overallFrequency": result.overallFrequency,
+          "executionFrequency": result.executionFrequency,
+          "proofFrequency": result.proofFrequency,
+          "proofSize": result.proofSize
+        ]
       } catch {
-        throw NSError(domain: "CairoMBindings", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to run program: \(error.localizedDescription)"])
+        throw NSError(
+          domain: "CairoMBindings",
+          code: 1,
+          userInfo: [
+            NSLocalizedDescriptionKey: "Failed to run program: \(error.localizedDescription)"
+          ],
+        )
       }
     }
   }
