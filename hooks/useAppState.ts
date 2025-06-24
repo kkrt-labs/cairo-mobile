@@ -19,7 +19,6 @@ export const useAppState = () => {
   const handleProgramSelect = (
     program: Program,
     mutations: {
-      runComputationMutation: UseMutationResult<any, Error, void, unknown>;
       generateProofMutation: UseMutationResult<any, Error, void, unknown>;
       verifyProofMutation: UseMutationResult<any, Error, void, unknown>;
     },
@@ -32,7 +31,6 @@ export const useAppState = () => {
     });
 
     // Reset mutations when switching programs
-    mutations.runComputationMutation.reset();
     mutations.generateProofMutation.reset();
     mutations.verifyProofMutation.reset();
   };

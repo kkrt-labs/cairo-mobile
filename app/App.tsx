@@ -46,8 +46,7 @@ function AppContent() {
   const mutations = useComputationMutations(state, setState);
   const { errorMessage, hasError } = useErrorHandling(mutations);
 
-  const { runComputationMutation, generateProofMutation, verifyProofMutation } =
-    mutations;
+  const { generateProofMutation, verifyProofMutation } = mutations;
 
   const currentProgramAvailable =
     Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
@@ -87,17 +86,14 @@ function AppContent() {
 
           {/* Action Buttons */}
           <ActionButtons
-            onRun={runComputationMutation.mutate}
             onGenerateProof={generateProofMutation.mutate}
             onVerifyProof={verifyProofMutation.mutate}
-            isRunDisabled={
-              !currentProgramAvailable || runComputationMutation.isPending
-            }
             isProofDisabled={
-              !state.computationResult?.run || generateProofMutation.isPending
+              !currentProgramAvailable || generateProofMutation.isPending
             }
             isVerifyDisabled={
-              !state.computationResult?.proof || verifyProofMutation.isPending
+              !state.computationResult?.runAndProof ||
+              verifyProofMutation.isPending
             }
           />
 
@@ -112,8 +108,7 @@ function AppContent() {
           {currentProgramAvailable && state.computationResult && (
             <ResultsDisplay
               result={state.computationResult}
-              showRun={!!state.computationResult.run}
-              showProof={!!state.computationResult.proof}
+              showProof={!!state.computationResult.runAndProof}
               showVerification={!!state.computationResult.verification}
             />
           )}
