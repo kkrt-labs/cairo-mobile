@@ -8,6 +8,7 @@
  * * `executionFrequency` - The frequency of the execution, in Hz
  * * `proofFrequency` - The frequency of the proof generation, in Hz
  * * `proofSize` - The size of the proof, in bytes
+ * * `proof` - The proof of the program
  */
 export type RunProofResult = {
   returnValue: number;
@@ -15,4 +16,9 @@ export type RunProofResult = {
   executionFrequency: number;
   proofFrequency: number;
   proofSize: number;
+  proof: string;
+};
+
+export type VerifyResult = {
+  verificationTime: number;
 };

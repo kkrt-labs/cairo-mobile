@@ -1,16 +1,3 @@
-import { ProofResult, VerificationResult } from "../ResultsDisplay";
-
-// Format time duration for display
-const formatTime = (milliseconds: number): string => {
-  if (milliseconds < 1) {
-    return `${(milliseconds * 1000).toFixed(1)}μs`;
-  } else if (milliseconds < 1000) {
-    return `${milliseconds.toFixed(2)}ms`;
-  } else {
-    return `${(milliseconds / 1000).toFixed(2)}s`;
-  }
-};
-
 // Format frequency with appropriate unit (Hz, kHz, MHz, GHz)
 export const formatFrequency = (frequencyInHz: number): string => {
   if (frequencyInHz >= 1000000000) {
@@ -31,39 +18,30 @@ export const formatFrequency = (frequencyInHz: number): string => {
   }
 };
 
-// Generate dummy proof data (TODO: Replace with actual proof generation)
-const generateProofData = (fibTerm: number, result: number): ProofResult => {
-  // Simulate proof size and time based on computation complexity
-  const complexity = Math.log10(fibTerm + 1);
-  const proofSize = (50 + complexity * 20).toFixed(1);
-  const provingTime = (100 + complexity * 50 + Math.random() * 100).toFixed(0);
-
-  return {
-    proofSize: `${proofSize} KB`,
-    provingTime: `${provingTime}ms`,
-  };
-};
-
-// Generate dummy verification data (TODO: Replace with actual verification)
-const generateVerificationData = (result: number): VerificationResult => {
-  // Verification is typically much faster than proving
-  const verificationTime = (5 + Math.random() * 15).toFixed(1);
-
-  return {
-    result: result,
-    verificationTime: `${verificationTime}ms`,
-  };
-};
-
-export const generateFibonacciProof = (
-  fibTerm: number,
-  result: number,
-): ProofResult => {
-  // TODO: Replace with actual Cairo-M proof generation
-  return generateProofData(fibTerm, result);
-};
-
-export const verifyFibonacciProof = (result: number): VerificationResult => {
-  // TODO: Replace with actual Cairo-M verification
-  return generateVerificationData(result);
+// Format time with appropriate unit (hr, min, s, ms, μs, ns)
+export const formatTime = (timeInSeconds: number): string => {
+  if (timeInSeconds >= 3600) {
+    // Hours range
+    const hours = timeInSeconds / 3600;
+    return `${hours.toFixed(hours >= 10 ? 1 : 2)} hr`;
+  } else if (timeInSeconds >= 60) {
+    // Minutes range
+    const minutes = timeInSeconds / 60;
+    return `${minutes.toFixed(minutes >= 10 ? 1 : 2)} min`;
+  } else if (timeInSeconds >= 1) {
+    // Seconds range
+    return `${timeInSeconds.toFixed(timeInSeconds >= 10 ? 1 : 2)} s`;
+  } else if (timeInSeconds >= 0.001) {
+    // Milliseconds range
+    const ms = timeInSeconds * 1000;
+    return `${ms.toFixed(ms >= 10 ? 1 : 2)} ms`;
+  } else if (timeInSeconds >= 0.000001) {
+    // Microseconds range
+    const μs = timeInSeconds * 1000000;
+    return `${μs.toFixed(μs >= 10 ? 1 : 2)} μs`;
+  } else {
+    // Nanoseconds range
+    const ns = timeInSeconds * 1000000000;
+    return `${ns.toFixed(ns >= 10 ? 1 : 2)} ns`;
+  }
 };

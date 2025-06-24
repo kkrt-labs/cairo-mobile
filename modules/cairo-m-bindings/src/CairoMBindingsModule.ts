@@ -1,8 +1,9 @@
 import { NativeModule, requireNativeModule } from "expo";
-import { RunProofResult } from "./CairoMBindings.types";
+import { RunProofResult, VerifyResult } from "./CairoMBindings.types";
 
 declare class CairoMBindingsModule extends NativeModule {
   runAndGenerateProof(programJsonStr: string): Promise<RunProofResult>;
+  verifyProof(proof: string): Promise<VerifyResult>;
 }
 
 // This call loads the native module object from the JSI.

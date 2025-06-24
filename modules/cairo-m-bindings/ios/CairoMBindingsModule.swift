@@ -18,7 +18,8 @@ public class CairoMBindingsModule: Module {
           "overallFrequency": result.overallFrequency,
           "executionFrequency": result.executionFrequency,
           "proofFrequency": result.proofFrequency,
-          "proofSize": result.proofSize
+          "proofSize": result.proofSize,
+          "proof": result.proof
         ]
       } catch {
         throw NSError(
@@ -28,6 +29,13 @@ public class CairoMBindingsModule: Module {
             NSLocalizedDescriptionKey: "Failed to run program: \(error.localizedDescription)"
           ],
         )
+      }
+    }
+
+    AsyncFunction("verifyProof") { (proof: String) -> [String: Any] in
+      do {
+        let result = try verifyProof(proof: proof)
+        return ["verificationTime": result.verificationTime]
       }
     }
   }

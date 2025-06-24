@@ -3,12 +3,14 @@ package expo.modules.cairombindings
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import uniffi.cairo_m_bindings.runAndGenerateProof
+import uniffi.cairo_m_bindings.verifyProof
 
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.records.Field
 
 // Import the UniFFI-generated RunProofResult, alias it for clarity
 import uniffi.cairo_m_bindings.RunProofResult as UniFFIRunProofResult
+import uniffi.cairo_m_bindings.VerifyResult as UniFFIVerifyResult
 
 // This is the data class that Expo Modules Kotlin will recognize and marshal.
 // It must implement `Record` and its fields should be marked with `@Field`.
@@ -18,6 +20,11 @@ data class ExpoRunProofResult(
     @Field val executionFrequency: Double,
     @Field val proofFrequency: Double,
     @Field val proofSize: Double,
+    @Field val proof: String,
+) : Record
+
+data class ExpoVerifyResult(
+    @Field val verificationTime: Double,
 ) : Record
 
 // Extension functions to easily convert between the UniFFI and Expo types
@@ -28,15 +35,12 @@ fun UniFFIRunProofResult.toExpoRunProofResult(): ExpoRunProofResult =
         executionFrequency = this.executionFrequency,
         proofFrequency = this.proofFrequency,
         proofSize = this.proofSize.toDouble(),
+        proof = this.proof,
     )
 
-fun ExpoRunProofResult.toUniFFIRunProofResult(): UniFFIRunProofResult =
-    UniFFIRunProofResult(
-        returnValue = this.returnValue.toUInt(),
-        overallFrequency = this.overallFrequency,
-        executionFrequency = this.executionFrequency,
-        proofFrequency = this.proofFrequency,
-        proofSize = this.proofSize.toUInt(),
+fun UniFFIVerifyResult.toExpoVerifyResult(): ExpoVerifyResult =
+    ExpoVerifyResult(
+        verificationTime = this.verificationTime.toDouble(),
     )
 
 class CairoMBindingsModule : Module() {
@@ -52,6 +56,10 @@ class CairoMBindingsModule : Module() {
 
             AsyncFunction("runAndGenerateProof") { programJsonStr: String ->
                 return@AsyncFunction runAndGenerateProof(programJsonStr).toExpoRunProofResult()
+            }
+
+            AsyncFunction("verifyProof") { proof: String ->
+                return@AsyncFunction verifyProof(proof).toExpoVerifyResult()
             }
         }
 }

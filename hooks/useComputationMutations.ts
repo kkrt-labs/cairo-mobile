@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import CairoMBindings from "@modules/cairo-m-bindings";
-import { RunProofResult } from "../modules/cairo-m-bindings/src/CairoMBindings.types";
-import { verifyFibonacciProof } from "../components/utils/computation";
+import {
+  RunProofResult,
+  VerifyResult,
+} from "../modules/cairo-m-bindings/src/CairoMBindings.types";
 import { AppState } from "./types";
 
 // Constants
@@ -33,8 +35,8 @@ export const useComputationMutations = (
       setState({
         lastMutation: "generateProof",
         computationResult: {
-          runAndProof: data,
-          verification: undefined,
+          runProofResult: data,
+          verifyResult: undefined,
         },
       });
     },
@@ -45,20 +47,20 @@ export const useComputationMutations = (
   });
 
   const verifyProofMutation = useMutation({
-    mutationFn: async () => {
-      if (!state.computationResult?.runAndProof) {
+    mutationFn: async (): Promise<VerifyResult> => {
+      if (!state.computationResult?.runProofResult) {
         throw new Error("No computation result available for verification");
       }
 
-      return verifyFibonacciProof(
-        state.computationResult.runAndProof.returnValue,
-      );
+      const proof = state.computationResult.runProofResult.proof;
+
+      return CairoMBindings.verifyProof(proof);
     },
     onSuccess: (data) => {
       setState({
         lastMutation: "verify",
         computationResult: state.computationResult
-          ? { ...state.computationResult, verification: data }
+          ? { ...state.computationResult, verifyResult: data }
           : null,
       });
     },

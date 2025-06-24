@@ -1,7 +1,9 @@
 uniffi::setup_scaffolding!();
 
 use cairo_m_common::Program;
-use cairo_m_prover::prover::prove_cairo_m;
+use cairo_m_prover::{
+    adapter::import_from_runner_output, prover::prove_cairo_m, verifier::verify_cairo_m,
+};
 use cairo_m_runner::run_cairo_program;
 // use cairo_m_prover::verifier::verify_cairo_m;
 use stwo_prover::core::vcs::blake2_merkle::Blake2sMerkleChannel;
@@ -15,6 +17,8 @@ pub enum MobileError {
     Vm(String),
     #[error("Proof generation error: {0}")]
     Proof(String),
+    #[error("Verification error: {0}")]
+    Verification(String),
 }
 
 /// The result and metrics of a successful program execution and proof generation.
@@ -26,6 +30,7 @@ pub enum MobileError {
 /// * `execution_frequency` - The frequency of the execution, in Hz
 /// * `proof_frequency` - The frequency of the proof generation, in Hz
 /// * `proof_size` - The size of the proof, in bytes
+/// * `proof` - The proof of the program, serialized as a JSON string
 #[derive(Debug, uniffi::Record)]
 pub struct RunProofResult {
     pub return_value: u32,
@@ -33,6 +38,12 @@ pub struct RunProofResult {
     pub execution_frequency: f64,
     pub proof_frequency: f64,
     pub proof_size: u32,
+    pub proof: String,
+}
+
+#[derive(Debug, uniffi::Record)]
+pub struct VerifyResult {
+    pub verification_time: f64,
 }
 
 /// Runs a compiled Cairo program and returns the result and execution metrics.
@@ -70,7 +81,9 @@ fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, Mo
     // │               Proof Generation                │
     // └───────────────────────────────────────────────┘
     let proof_start = std::time::Instant::now();
-    let proof = prove_cairo_m::<Blake2sMerkleChannel, 3>(13)
+    let prover_input =
+        import_from_runner_output(&output).map_err(|e| MobileError::Proof(e.to_string()))?;
+    let proof = prove_cairo_m::<Blake2sMerkleChannel>(prover_input)
         .map_err(|e| MobileError::Proof(e.to_string()))?;
 
     // ┌───────────────────────────────────────────────┐
@@ -85,6 +98,7 @@ fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, Mo
     let proof_frequency = num_steps / proof_duration.as_secs_f64();
 
     let proof_size = proof.stark_proof.size_estimate() as u32;
+    let proof_json = sonic_rs::to_string(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
 
     Ok(RunProofResult {
         return_value: output.return_value,
@@ -92,6 +106,22 @@ fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, Mo
         execution_frequency,
         proof_frequency,
         proof_size,
+        proof: proof_json,
+    })
+}
+
+#[uniffi::export]
+fn verify_proof(proof: String) -> Result<VerifyResult, MobileError> {
+    let verification_start = std::time::Instant::now();
+
+    let proof = sonic_rs::from_str(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
+    verify_cairo_m::<Blake2sMerkleChannel>(proof)
+        .map_err(|e| MobileError::Verification(e.to_string()))?;
+
+    let verification_duration = verification_start.elapsed();
+
+    Ok(VerifyResult {
+        verification_time: verification_duration.as_secs_f64(),
     })
 }
 
@@ -102,9 +132,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_fibonacci_program() {
+    fn test_fibonacci_program() -> Result<(), MobileError> {
         let file_content = fs::read_to_string("test_data/fibonacci.json").unwrap();
         let result = run_and_generate_proof(file_content).unwrap();
         assert_eq!(result.return_value, 55);
+        verify_proof(result.proof)?;
+        Ok(())
     }
 }

@@ -1,17 +1,15 @@
 import { Program } from "../components/ProgramDropdown";
-import { RunProofResult } from "../modules/cairo-m-bindings/src/CairoMBindings.types";
+import {
+  RunProofResult,
+  VerifyResult,
+} from "../modules/cairo-m-bindings/src/CairoMBindings.types";
 
 // Types
 export type MutationType = "generateProof" | "verify";
 
-export interface VerificationResult {
-  result: number;
-  verificationTime: string;
-}
-
 export interface ComputationResult {
-  runAndProof: RunProofResult;
-  verification?: VerificationResult;
+  runProofResult: RunProofResult;
+  verifyResult?: VerifyResult;
 }
 
 export interface AppState {

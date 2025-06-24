@@ -92,7 +92,7 @@ function AppContent() {
               !currentProgramAvailable || generateProofMutation.isPending
             }
             isVerifyDisabled={
-              !state.computationResult?.runAndProof ||
+              !state.computationResult?.runProofResult ||
               verifyProofMutation.isPending
             }
           />
@@ -108,8 +108,8 @@ function AppContent() {
           {currentProgramAvailable && state.computationResult && (
             <ResultsDisplay
               result={state.computationResult}
-              showProof={!!state.computationResult.runAndProof}
-              showVerification={!!state.computationResult.verification}
+              showProof={!!state.computationResult.runProofResult}
+              showVerification={!!state.computationResult.verifyResult}
             />
           )}
         </ScrollView>
