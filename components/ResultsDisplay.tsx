@@ -2,10 +2,11 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { typography } from "./styles/typography";
 import { Accordion } from "./Accordion";
+import { formatFrequency } from "./utils/computation";
 
 export interface RunResult {
-  result: number;
-  traceGenerationSpeed: string; // in MHz
+  returnValue: number;
+  frequency: number;
 }
 
 export interface ProofResult {
@@ -53,10 +54,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         {/* Run Results */}
         {showRun && (
           <Accordion title="Run Results" defaultExpanded={true}>
-            <ResultItem label="Result" value={result.run.result} />
+            <ResultItem label="Result" value={result.run.returnValue} />
             <ResultItem
-              label="Trace Generation Speed"
-              value={result.run.traceGenerationSpeed}
+              label="Frequency"
+              value={formatFrequency(result.run.frequency)}
             />
           </Accordion>
         )}

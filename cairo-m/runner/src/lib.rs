@@ -1,16 +1,15 @@
 uniffi::setup_scaffolding!();
 
-use cairo_m_compiler::CompiledProgram;
+use cairo_m_common::Program;
+use cairo_m_runner::run_cairo_program;
 
 /// Represents the possible errors that can occur in the mobile VM.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum MobileVmError {
-    #[error("VM Error: {message}")]
-    Vm { message: String },
-    #[error("IO Error: {message}")]
-    Io { message: String },
-    #[error("JSON parsing error: {message}")]
-    Json { message: String },
+    #[error("VM Error: {0}")]
+    Vm(String),
+    #[error("JSON parsing error: {0}")]
+    Json(String),
 }
 
 /// The result of a successful program execution.
@@ -29,7 +28,6 @@ pub struct RunResult {
 ///
 /// This function takes the JSON content of a compiled Cairo program,
 /// executes it and measures performance.
-/// It writes execution trace files (`trace.bin` and `memory.bin`) to disk.
 ///
 /// ## Parameters
 ///
@@ -42,32 +40,17 @@ pub struct RunResult {
 ///
 /// ## Errors
 ///
-/// Returns a `MobileVmError` if JSON parsing, VM execution, or file I/O fails.
+/// Returns a `MobileVmError` if JSON parsing or VM execution fails.
+// TODO: Integrate execution and proof generation into a single function.
 #[uniffi::export]
 fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
     let overall_start = std::time::Instant::now();
-    let compiled_program: CompiledProgram =
-        sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json {
-            message: e.to_string(),
-        })?;
+    let compiled_program: Program =
+        sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json(e.to_string()))?;
 
-    let output = cairo_m_runner::run_cairo_program(&compiled_program, "main", Default::default())
-        .map_err(|e| MobileVmError::Vm {
-        message: e.to_string(),
-    })?;
+    let output = run_cairo_program(&compiled_program, "main", Default::default())
+        .map_err(|e| MobileVmError::Vm(e.to_string()))?;
 
-    output
-        .vm
-        .write_binary_trace("trace.bin")
-        .map_err(|e| MobileVmError::Io {
-            message: e.to_string(),
-        })?;
-    output
-        .vm
-        .write_binary_memory_trace("memory.bin")
-        .map_err(|e| MobileVmError::Io {
-            message: e.to_string(),
-        })?;
     let overall_duration = overall_start.elapsed();
 
     let num_steps = output.vm.trace.len() as f64;
@@ -85,20 +68,8 @@ mod tests {
 
     use super::*;
 
-    /// A helper struct to clean up generated files at the end of a test.
-    struct FileCleanup(&'static [&'static str]);
-
-    impl Drop for FileCleanup {
-        fn drop(&mut self) {
-            for path in self.0 {
-                let _ = std::fs::remove_file(path);
-            }
-        }
-    }
-
     #[test]
     fn test_fibonacci_program() {
-        let _cleanup = FileCleanup(&["memory.bin", "trace.bin"]);
         let file_content = fs::read_to_string("test_data/fibonacci.json").unwrap();
         let result = run_program(file_content).unwrap();
         assert_eq!(result.return_value, 55);

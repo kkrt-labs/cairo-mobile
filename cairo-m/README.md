@@ -37,7 +37,7 @@ cargo test --release
 # Kotlin example
 cargo run --package uniffi-bindgen \
   generate \
-  --library target/release/libcairo_m_runner.dylib \
+  --library target/release/libcairo_m_bindings.dylib \
   --language kotlin \
   --out-dir out/kotlin
 ```
@@ -46,7 +46,7 @@ cargo run --package uniffi-bindgen \
 # Swift example
 cargo run --package uniffi-bindgen \
   generate \
-  --library target/release/libcairo_m_runner.a \
+  --library target/release/libcairo_m_bindings.a \
   --language swift \
   --out-dir out/swift
 ```

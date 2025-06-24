@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View, Text, ScrollView } from "react-native";
-import { useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
   useFonts,
@@ -9,91 +8,49 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Components
 import { ProgramDropdown, Program } from "../components/ProgramDropdown";
 import { NumberInput } from "../components/NumberInput";
 import { ActionButtons } from "../components/ActionButtons";
-import {
-  ResultsDisplay,
-  ComputationResult,
-} from "../components/ResultsDisplay";
-import { ComingSoon } from "../components/ComingSoon";
+import { ResultsDisplay } from "../components/ResultsDisplay";
 
 // Data and Utils
-// TODO: Remove once cairo-m native module is implemented
 import { Programs } from "../components/data/constants";
-import {
-  getFibonacciRunResult,
-  generateFibonacciProof,
-  verifyFibonacciProof,
-} from "../components/utils/computation";
 
 // Styles
 import { colors } from "../components/styles/colors";
 import { typography } from "../components/styles/typography";
 
+// Hooks
+import { useComputationMutations } from "../hooks/useComputationMutations";
+import { useAppState } from "../hooks/useAppState";
+import { useErrorHandling } from "../hooks/useErrorHandling";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
 function AppContent() {
-  const [computationResult, setComputationResult] =
-    useState<ComputationResult | null>(null);
-  const [inputValue, setInputValue] = useState<string>("");
-  const [selectedProgram, setSelectedProgram] = useState<Program>("fibonacci");
+  const { state, setState, handleProgramSelect } = useAppState();
+  const mutations = useComputationMutations(state, setState);
+  const { errorMessage, hasError } = useErrorHandling(mutations);
 
-  const handleRunComputation = () => {
-    // TODO: Update once cairo-m native module is implemented
-    const numValue = parseInt(inputValue, 10);
-
-    if (isNaN(numValue) || numValue <= 0) {
-      // Handle invalid input - could show an error or use default
-      return;
-    }
-
-    if (selectedProgram === "fibonacci") {
-      const runResult = getFibonacciRunResult(numValue);
-      setComputationResult({
-        run: runResult,
-        proof: undefined,
-        verification: undefined,
-      });
-    }
-  };
-
-  const handleGenerateProof = () => {
-    if (computationResult?.run) {
-      const proofResult = generateFibonacciProof(
-        parseInt(inputValue, 10),
-        computationResult.run.result,
-      );
-      setComputationResult((prev) =>
-        prev ? { ...prev, proof: proofResult } : null,
-      );
-    }
-  };
-
-  const handleVerifyProof = () => {
-    if (computationResult?.run) {
-      const verificationResult = verifyFibonacciProof(
-        computationResult.run.result,
-      );
-      setComputationResult((prev) =>
-        prev ? { ...prev, verification: verificationResult } : null,
-      );
-    }
-  };
+  const { runComputationMutation, generateProofMutation, verifyProofMutation } =
+    mutations;
 
   const currentProgramAvailable =
-    Programs.find((p) => p.type === selectedProgram)?.available ?? false;
-
-  // Update input when program changes
-  const handleProgramSelect = (program: Program) => {
-    setSelectedProgram(program);
-    setComputationResult(null); // Clear results when switching programs
-
-    // Reset to default value when switching programs
-    if (program === "fibonacci") {
-      setInputValue("");
-    }
-  };
+    Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
 
   return (
     <SafeAreaProvider>
@@ -112,37 +69,52 @@ function AppContent() {
         >
           {/* Program Selection */}
           <ProgramDropdown
-            selectedProgram={selectedProgram}
-            onProgramSelect={handleProgramSelect}
+            selectedProgram={state.selectedProgram}
+            onProgramSelect={(program) =>
+              handleProgramSelect(program, mutations)
+            }
             Programs={Programs}
           />
 
           {/* Number Input - Only show if fibonacci is selected and available */}
-          {selectedProgram === "fibonacci" && currentProgramAvailable && (
+          {state.selectedProgram === "fibonacci" && currentProgramAvailable && (
             <NumberInput
-              value={inputValue}
-              onValueChange={setInputValue}
+              value={state.inputValue}
+              onValueChange={(value) => setState({ inputValue: value })}
               placeholder="Enter fibonacci term"
             />
           )}
 
           {/* Action Buttons */}
           <ActionButtons
-            onRun={handleRunComputation}
-            onGenerateProof={handleGenerateProof}
-            onVerifyProof={handleVerifyProof}
-            isRunDisabled={!currentProgramAvailable}
-            isProofDisabled={!computationResult?.run}
-            isVerifyDisabled={!computationResult?.proof}
+            onRun={runComputationMutation.mutate}
+            onGenerateProof={generateProofMutation.mutate}
+            onVerifyProof={verifyProofMutation.mutate}
+            isRunDisabled={
+              !currentProgramAvailable || runComputationMutation.isPending
+            }
+            isProofDisabled={
+              !state.computationResult?.run || generateProofMutation.isPending
+            }
+            isVerifyDisabled={
+              !state.computationResult?.proof || verifyProofMutation.isPending
+            }
           />
 
+          {/* Error Display */}
+          {hasError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
           {/* Results - Only show if we have results and program is available */}
-          {currentProgramAvailable && computationResult && (
+          {currentProgramAvailable && state.computationResult && (
             <ResultsDisplay
-              result={computationResult}
-              showRun={!!computationResult.run}
-              showProof={!!computationResult.proof}
-              showVerification={!!computationResult.verification}
+              result={state.computationResult}
+              showRun={!!state.computationResult.run}
+              showProof={!!state.computationResult.proof}
+              showVerification={!!state.computationResult.verification}
             />
           )}
         </ScrollView>
@@ -163,7 +135,11 @@ export default function App() {
     return null;
   }
 
-  return <AppContent />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -182,6 +158,17 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     gap: 24,
-    paddingBottom: 24, // Add bottom padding for better scrolling
+    paddingBottom: 24,
+  },
+  errorContainer: {
+    backgroundColor: "#ffebee",
+    padding: 16,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  errorText: {
+    color: "#c62828",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
