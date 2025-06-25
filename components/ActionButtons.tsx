@@ -3,46 +3,20 @@ import { StyleSheet, View, Text, Pressable } from "react-native";
 import { colors } from "./styles/colors";
 
 interface ActionButtonsProps {
-  onRun: () => void;
   onGenerateProof: () => void;
   onVerifyProof: () => void;
-  isRunDisabled: boolean;
   isProofDisabled: boolean;
   isVerifyDisabled: boolean;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
-  onRun,
   onGenerateProof,
   onVerifyProof,
-  isRunDisabled,
   isProofDisabled,
   isVerifyDisabled,
 }) => {
   return (
     <View style={styles.container}>
-      <Pressable
-        style={({ pressed }) => [
-          styles.primaryButton,
-          isRunDisabled && styles.primaryButtonDisabled,
-          pressed && !isRunDisabled && styles.primaryButtonPressed,
-        ]}
-        onPress={onRun}
-        disabled={isRunDisabled}
-        android_ripple={
-          !isRunDisabled ? { color: `${colors.background}4D` } : undefined
-        }
-      >
-        <Text
-          style={[
-            styles.primaryButtonText,
-            isRunDisabled && styles.primaryButtonTextDisabled,
-          ]}
-        >
-          Run
-        </Text>
-      </Pressable>
-
       <Pressable
         style={({ pressed }) => [
           isProofDisabled ? styles.disabledButton : styles.primaryButton,

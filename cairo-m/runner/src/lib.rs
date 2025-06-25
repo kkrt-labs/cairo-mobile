@@ -1,64 +1,120 @@
 uniffi::setup_scaffolding!();
 
 use cairo_m_common::Program;
+use cairo_m_prover::{
+    adapter::import_from_runner_output, prover::prove_cairo_m, verifier::verify_cairo_m,
+};
 use cairo_m_runner::run_cairo_program;
+use stwo_prover::core::vcs::blake2_merkle::Blake2sMerkleChannel;
 
 /// Represents the possible errors that can occur in the mobile VM.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
-pub enum MobileVmError {
-    #[error("VM Error: {0}")]
-    Vm(String),
+pub enum MobileError {
     #[error("JSON parsing error: {0}")]
     Json(String),
+    #[error("VM Error: {0}")]
+    Vm(String),
+    #[error("Proof generation error: {0}")]
+    Proof(String),
+    #[error("Verification error: {0}")]
+    Verification(String),
 }
 
-/// The result of a successful program execution.
+/// The result and metrics of a successful program execution and proof generation.
 ///
 /// # Fields
 ///
 /// * `return_value` - The return value of the program
-/// * `frequency` - The frequency of the trace generation, in Hz
+/// * `overall_frequency` - The frequency of the execution and proof generation, in Hz
+/// * `execution_frequency` - The frequency of the execution, in Hz
+/// * `proof_frequency` - The frequency of the proof generation, in Hz
+/// * `proof_size` - The size of the proof, in bytes
+/// * `proof` - The proof of the program, serialized as a JSON string
 #[derive(Debug, uniffi::Record)]
-pub struct RunResult {
+pub struct RunProofResult {
     pub return_value: u32,
-    pub frequency: f64,
+    pub overall_frequency: f64,
+    pub execution_frequency: f64,
+    pub proof_frequency: f64,
+    pub proof_size: u32,
+    pub proof: String,
 }
 
-/// Runs a compiled Cairo program and returns the result and execution metrics.
-///
-/// This function takes the JSON content of a compiled Cairo program,
-/// executes it and measures performance.
+#[derive(Debug, uniffi::Record)]
+pub struct VerifyResult {
+    pub verification_time: f64,
+}
+
+/// Runs a compiled Cairo program and generate a proof of execution.
+/// It returns the result, execution metrics and the proof generated.
 ///
 /// ## Parameters
 ///
-/// * `file_content` - JSON string containing the compiled Cairo program
+/// * `program_json_str` - JSON string containing the compiled Cairo program
 ///
 /// ## Returns
 ///
-/// Returns `RunResult` containing the program's return value and performance metrics
-/// including execution time, trace generation time, and steps per second.
+/// Returns `RunProofResult` containing the program's return value and performance metrics
+/// including execution time, proof generation time, and frequency based on the number of instruction steps.
 ///
 /// ## Errors
 ///
-/// Returns a `MobileVmError` if JSON parsing or VM execution fails.
-// TODO: Integrate execution and proof generation into a single function.
+/// Returns a `MobileError` if JSON parsing, VM execution, or proof generation fails.
 #[uniffi::export]
-fn run_program(file_content: String) -> Result<RunResult, MobileVmError> {
+fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, MobileError> {
     let overall_start = std::time::Instant::now();
+
+    // Program Execution - Trace Generation
+
     let compiled_program: Program =
-        sonic_rs::from_str(&file_content).map_err(|e| MobileVmError::Json(e.to_string()))?;
+        sonic_rs::from_str(&program_json_str).map_err(|e| MobileError::Json(e.to_string()))?;
 
     let output = run_cairo_program(&compiled_program, "main", Default::default())
-        .map_err(|e| MobileVmError::Vm(e.to_string()))?;
+        .map_err(|e| MobileError::Vm(e.to_string()))?;
 
+    let execution_duration = overall_start.elapsed();
+
+    // Proof Generation
+
+    let proof_start = std::time::Instant::now();
+    let prover_input =
+        import_from_runner_output(&output).map_err(|e| MobileError::Proof(e.to_string()))?;
+    let proof = prove_cairo_m::<Blake2sMerkleChannel>(prover_input)
+        .map_err(|e| MobileError::Proof(e.to_string()))?;
+
+    let proof_duration = proof_start.elapsed();
     let overall_duration = overall_start.elapsed();
 
-    let num_steps = output.vm.trace.len() as f64;
-    let frequency = num_steps / overall_duration.as_secs_f64();
+    // Metrics Computation
 
-    Ok(RunResult {
+    let num_steps = output.vm.trace.len() as f64;
+    let execution_frequency = num_steps / execution_duration.as_secs_f64();
+    let proof_frequency = num_steps / proof_duration.as_secs_f64();
+    let overall_frequency = num_steps / overall_duration.as_secs_f64();
+
+    let proof_size = proof.stark_proof.size_estimate() as u32;
+    let proof_json = sonic_rs::to_string(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
+
+    Ok(RunProofResult {
         return_value: output.return_value,
-        frequency,
+        overall_frequency,
+        execution_frequency,
+        proof_frequency,
+        proof_size,
+        proof: proof_json,
+    })
+}
+
+#[uniffi::export]
+fn verify_proof(proof: String) -> Result<VerifyResult, MobileError> {
+    let verification_start = std::time::Instant::now();
+
+    let proof = sonic_rs::from_str(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
+    verify_cairo_m::<Blake2sMerkleChannel>(proof)
+        .map_err(|e| MobileError::Verification(e.to_string()))?;
+
+    Ok(VerifyResult {
+        verification_time: verification_start.elapsed().as_secs_f64(),
     })
 }
 
@@ -69,9 +125,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_fibonacci_program() {
+    fn test_fibonacci_program() -> Result<(), MobileError> {
         let file_content = fs::read_to_string("test_data/fibonacci.json").unwrap();
-        let result = run_program(file_content).unwrap();
+        let result = run_and_generate_proof(file_content).unwrap();
         assert_eq!(result.return_value, 55);
+        verify_proof(result.proof)?;
+        Ok(())
     }
 }

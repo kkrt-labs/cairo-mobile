@@ -2,32 +2,19 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { typography } from "./styles/typography";
 import { Accordion } from "./Accordion";
-import { formatFrequency } from "./utils/computation";
-
-export interface RunResult {
-  returnValue: number;
-  frequency: number;
-}
-
-export interface ProofResult {
-  proofSize: string; // in KB
-  provingTime: string;
-}
-
-export interface VerificationResult {
-  result: number;
-  verificationTime: string;
-}
+import { formatFrequency, formatTime } from "./utils/computation";
+import {
+  RunProofResult,
+  VerifyResult,
+} from "../modules/cairo-m-bindings/src/CairoMBindings.types";
 
 export interface ComputationResult {
-  run: RunResult;
-  proof?: ProofResult;
-  verification?: VerificationResult;
+  runProofResult: RunProofResult;
+  verifyResult?: VerifyResult;
 }
 
 interface ResultsDisplayProps {
   result: ComputationResult;
-  showRun: boolean;
   showProof: boolean;
   showVerification: boolean;
 }
@@ -44,39 +31,52 @@ const ResultItem: React.FC<{ label: string; value: string | number }> = ({
 
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   result,
-  showRun,
   showProof,
   showVerification,
 }) => {
+  const formatProofSize = (sizeInBytes: number): string => {
+    const sizeInKB = sizeInBytes / 1024;
+    if (sizeInKB < 1) {
+      return `${sizeInBytes} B`;
+    }
+    return `${sizeInKB.toFixed(2)} KB`;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.accordionContainer}>
-        {/* Run Results */}
-        {showRun && (
-          <Accordion title="Run Results" defaultExpanded={true}>
-            <ResultItem label="Result" value={result.run.returnValue} />
+        {/* Proof Results */}
+        {showProof && (
+          <Accordion title="Proof Results" defaultExpanded={true}>
             <ResultItem
-              label="Frequency"
-              value={formatFrequency(result.run.frequency)}
+              label="Result"
+              value={result.runProofResult.returnValue}
+            />
+            <ResultItem
+              label="Overall Frequency"
+              value={formatFrequency(result.runProofResult.overallFrequency)}
+            />
+            <ResultItem
+              label="Execution Frequency"
+              value={formatFrequency(result.runProofResult.executionFrequency)}
+            />
+            <ResultItem
+              label="Proof Frequency"
+              value={formatFrequency(result.runProofResult.proofFrequency)}
+            />
+            <ResultItem
+              label="Proof Size"
+              value={formatProofSize(result.runProofResult.proofSize)}
             />
           </Accordion>
         )}
 
-        {/* Proof Results */}
-        {showProof && result.proof && (
-          <Accordion title="Proof Results" defaultExpanded={true}>
-            <ResultItem label="Proof Size" value={result.proof.proofSize} />
-            <ResultItem label="Proving Time" value={result.proof.provingTime} />
-          </Accordion>
-        )}
-
         {/* Verification Results */}
-        {showVerification && result.verification && (
+        {showVerification && result.verifyResult && (
           <Accordion title="Verification Results" defaultExpanded={true}>
-            <ResultItem label="Result" value={result.verification.result} />
             <ResultItem
               label="Verification Time"
-              value={result.verification.verificationTime}
+              value={formatTime(result.verifyResult.verificationTime)}
             />
           </Accordion>
         )}

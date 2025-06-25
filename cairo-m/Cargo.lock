@@ -351,8 +351,10 @@ name = "cairo-m-bindings"
 version = "0.1.1"
 dependencies = [
  "cairo-m-common",
+ "cairo-m-prover",
  "cairo-m-runner",
  "sonic-rs 0.5.1",
+ "stwo-prover",
  "thiserror 2.0.12",
  "uniffi",
 ]
@@ -360,7 +362,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-common"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "num-traits",
  "serde",
@@ -372,7 +374,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -394,7 +396,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-codegen"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "cairo-m-common",
  "cairo-m-compiler-diagnostics",
@@ -417,7 +419,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -426,7 +428,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-mir"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "cairo-m-compiler-diagnostics",
  "cairo-m-compiler-parser",
@@ -441,7 +443,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-parser"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "ariadne",
  "cairo-m-compiler-diagnostics",
@@ -459,7 +461,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-semantic"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
  "ariadne",
  "bitflags",
@@ -480,10 +482,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-m-prover"
+version = "0.1.1"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
+dependencies = [
+ "bytemuck",
+ "cairo-m-common",
+ "cairo-m-compiler",
+ "cairo-m-runner",
+ "num-traits",
+ "rand",
+ "rayon",
+ "serde",
+ "sonic-rs 0.5.1",
+ "stwo-air-utils",
+ "stwo-air-utils-derive",
+ "stwo-prover",
+ "thiserror 2.0.12",
+ "tracing",
+]
+
+[[package]]
 name = "cairo-m-runner"
 version = "0.1.1"
-source = "git+https://github.com/kkrt-labs/cairo-m#1f86d21891deb4c497d57fc4b9cffbc2b5eaf879"
+source = "git+https://github.com/kkrt-labs/cairo-m#7c44701749551c2ea9bb6ead3ec85cb651d4a67c"
 dependencies = [
+ "anyhow",
  "cairo-m-common",
  "cairo-m-compiler",
  "clap",
@@ -1025,6 +1049,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1331,6 +1364,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
+ "libc",
  "rand_chacha",
  "rand_core",
 ]
@@ -1350,6 +1384,9 @@ name = "rand_core"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+dependencies = [
+ "getrandom 0.2.16",
+]
 
 [[package]]
 name = "rayon"
@@ -1829,6 +1866,29 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
+
+[[package]]
+name = "stwo-air-utils"
+version = "0.1.1"
+source = "git+https://github.com/starkware-libs/stwo?rev=8b5436d#8b5436d807ef34db71b7f89b275d2f2ae13e883c"
+dependencies = [
+ "bytemuck",
+ "itertools 0.12.1",
+ "rayon",
+ "stwo-air-utils-derive",
+ "stwo-prover",
+]
+
+[[package]]
+name = "stwo-air-utils-derive"
+version = "0.1.0"
+source = "git+https://github.com/starkware-libs/stwo?rev=8b5436d#8b5436d807ef34db71b7f89b275d2f2ae13e883c"
+dependencies = [
+ "itertools 0.13.0",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
 
 [[package]]
 name = "stwo-prover"
