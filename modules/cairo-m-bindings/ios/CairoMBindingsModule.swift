@@ -12,7 +12,7 @@ public class CairoMBindingsModule: Module {
 
     AsyncFunction("runAndGenerateProof") { (programJsonStr: String) -> [String: Any] in
       do {
-        let result = try runProgram(programJsonStr: programJsonStr)
+        let result = try runAndGenerateProof(programJsonStr: programJsonStr)
         return [
           "returnValue": result.returnValue,
           "overallFrequency": result.overallFrequency,
@@ -27,7 +27,7 @@ public class CairoMBindingsModule: Module {
           code: 1,
           userInfo: [
             NSLocalizedDescriptionKey: "Failed to run program: \(error.localizedDescription)"
-          ],
+          ]
         )
       }
     }
