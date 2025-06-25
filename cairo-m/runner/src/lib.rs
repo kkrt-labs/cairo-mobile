@@ -5,7 +5,6 @@ use cairo_m_prover::{
     adapter::import_from_runner_output, prover::prove_cairo_m, verifier::verify_cairo_m,
 };
 use cairo_m_runner::run_cairo_program;
-// use cairo_m_prover::verifier::verify_cairo_m;
 use stwo_prover::core::vcs::blake2_merkle::Blake2sMerkleChannel;
 
 /// Represents the possible errors that can occur in the mobile VM.
@@ -46,10 +45,8 @@ pub struct VerifyResult {
     pub verification_time: f64,
 }
 
-/// Runs a compiled Cairo program and returns the result and execution metrics.
-///
-/// This function takes the JSON content of a compiled Cairo program,
-/// executes it, generates a proof, and measures performance.
+/// Runs a compiled Cairo program and generate a proof of execution.
+/// It returns the result, execution metrics and the proof generated.
 ///
 /// ## Parameters
 ///
@@ -66,9 +63,9 @@ pub struct VerifyResult {
 #[uniffi::export]
 fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, MobileError> {
     let overall_start = std::time::Instant::now();
-    // ┌───────────────────────────────────────────────┐
-    // │      Program Execution - Trace Generation     │
-    // └───────────────────────────────────────────────┘
+
+    // Program Execution - Trace Generation
+
     let compiled_program: Program =
         sonic_rs::from_str(&program_json_str).map_err(|e| MobileError::Json(e.to_string()))?;
 
@@ -77,25 +74,23 @@ fn run_and_generate_proof(program_json_str: String) -> Result<RunProofResult, Mo
 
     let execution_duration = overall_start.elapsed();
 
-    // ┌───────────────────────────────────────────────┐
-    // │               Proof Generation                │
-    // └───────────────────────────────────────────────┘
+    // Proof Generation
+
     let proof_start = std::time::Instant::now();
     let prover_input =
         import_from_runner_output(&output).map_err(|e| MobileError::Proof(e.to_string()))?;
     let proof = prove_cairo_m::<Blake2sMerkleChannel>(prover_input)
         .map_err(|e| MobileError::Proof(e.to_string()))?;
 
-    // ┌───────────────────────────────────────────────┐
-    // │               Metrics Computation             │
-    // └───────────────────────────────────────────────┘
     let proof_duration = proof_start.elapsed();
     let overall_duration = overall_start.elapsed();
 
+    // Metrics Computation
+
     let num_steps = output.vm.trace.len() as f64;
-    let overall_frequency = num_steps / overall_duration.as_secs_f64();
     let execution_frequency = num_steps / execution_duration.as_secs_f64();
     let proof_frequency = num_steps / proof_duration.as_secs_f64();
+    let overall_frequency = num_steps / overall_duration.as_secs_f64();
 
     let proof_size = proof.stark_proof.size_estimate() as u32;
     let proof_json = sonic_rs::to_string(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
@@ -118,10 +113,8 @@ fn verify_proof(proof: String) -> Result<VerifyResult, MobileError> {
     verify_cairo_m::<Blake2sMerkleChannel>(proof)
         .map_err(|e| MobileError::Verification(e.to_string()))?;
 
-    let verification_duration = verification_start.elapsed();
-
     Ok(VerifyResult {
-        verification_time: verification_duration.as_secs_f64(),
+        verification_time: verification_start.elapsed().as_secs_f64(),
     })
 }
 
