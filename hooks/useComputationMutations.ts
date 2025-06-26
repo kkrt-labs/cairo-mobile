@@ -7,7 +7,7 @@ import {
 import { AppState } from "./types";
 
 // Constants
-const fibCircuit = require("../assets/cairo-m/fib.json");
+const fibCircuit = require("../assets/cairo-m/fibonacci_loop.json");
 
 // Custom hook for managing computation mutations
 export const useComputationMutations = (
@@ -28,6 +28,8 @@ export const useComputationMutations = (
 
       const result = await CairoMBindings.runAndGenerateProof(
         JSON.stringify(fibCircuit),
+        "fibonacci_loop",
+        [numValue],
       );
       return result;
     },

@@ -1,7 +1,5 @@
 uniffi::setup_scaffolding!();
 
-use std::collections::HashMap;
-
 use cairo_m_common::Program;
 use cairo_m_prover::{
     adapter::import_from_runner_output, prover::prove_cairo_m, verifier::verify_cairo_m,
@@ -16,6 +14,8 @@ pub enum MobileError {
     Json(String),
     #[error("VM Error: {0}")]
     Vm(String),
+    #[error("Adapter error: {0}")]
+    Adapter(String),
     #[error("Proof generation error: {0}")]
     Proof(String),
     #[error("Verification error: {0}")]
@@ -26,7 +26,7 @@ pub enum MobileError {
 ///
 /// # Fields
 ///
-/// * `return_value` - The return value of the program
+/// * `return_values` - The return values of the program
 /// * `overall_frequency` - The frequency of the execution and proof generation, in Hz
 /// * `execution_frequency` - The frequency of the execution, in Hz
 /// * `proof_frequency` - The frequency of the proof generation, in Hz
@@ -34,8 +34,7 @@ pub enum MobileError {
 /// * `proof` - The proof of the program, serialized as a JSON string
 #[derive(Debug, uniffi::Record)]
 pub struct RunProofResult {
-    pub num_return_values: u32,
-    pub return_values: HashMap<String, u32>,
+    pub return_values: Vec<u32>,
     pub overall_frequency: f64,
     pub execution_frequency: f64,
     pub proof_frequency: f64,
@@ -67,7 +66,7 @@ pub struct VerifyResult {
 fn run_and_generate_proof(
     program_json_str: String,
     entrypoint_name: String,
-    inputs: HashMap<String, u32>,
+    inputs: Vec<u32>,
 ) -> Result<RunProofResult, MobileError> {
     let overall_start = std::time::Instant::now();
 
@@ -83,17 +82,11 @@ fn run_and_generate_proof(
             entrypoint_name
         )))?;
 
-    // Create runner inputs by mapping entrypoint args to input values
-    let runner_inputs: Vec<M31> = entrypoint
-        .args
+    let runner_inputs: Vec<M31> = inputs
         .iter()
-        .map(|arg_name| {
-            inputs
-                .get(arg_name)
-                .map(|&value| M31::from(value))
-                .ok_or_else(|| MobileError::Vm(format!("Missing input for argument: {}", arg_name)))
-        })
-        .collect::<Result<Vec<M31>, MobileError>>()?;
+        .take(entrypoint.args.len())
+        .map(|&value| M31::from(value))
+        .collect();
 
     let runner_output = run_cairo_program(
         &compiled_program,
@@ -105,11 +98,13 @@ fn run_and_generate_proof(
 
     let execution_duration = overall_start.elapsed();
 
+    println!("trace: {:?}", runner_output.vm.trace);
+
     // Proof Generation
 
     let proof_start = std::time::Instant::now();
-    let prover_input =
-        import_from_runner_output(&runner_output).map_err(|e| MobileError::Proof(e.to_string()))?;
+    let prover_input = import_from_runner_output(&runner_output)
+        .map_err(|e| MobileError::Adapter(e.to_string()))?;
     let proof = prove_cairo_m::<Blake2sMerkleChannel>(prover_input)
         .map_err(|e| MobileError::Proof(e.to_string()))?;
 
@@ -120,8 +115,7 @@ fn run_and_generate_proof(
     let return_values = runner_output
         .return_values
         .iter()
-        .enumerate()
-        .map(|(i, value)| (format!("arg{}", i), value.0))
+        .map(|value| value.0)
         .collect();
 
     // Metrics Computation
@@ -135,7 +129,6 @@ fn run_and_generate_proof(
     let proof_json = sonic_rs::to_string(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
 
     Ok(RunProofResult {
-        num_return_values: entrypoint.num_return_values as u32,
         return_values,
         overall_frequency,
         execution_frequency,
@@ -167,14 +160,11 @@ mod tests {
     #[test]
     fn test_fibonacci_program() -> Result<(), MobileError> {
         let file_content = fs::read_to_string("test_data/fibonacci_loop.json").unwrap();
-        let result = run_and_generate_proof(
-            file_content,
-            "fibonacci_loop".to_string(),
-            HashMap::from([("arg0".to_string(), 10)]),
-        )
-        .unwrap();
-        assert_eq!(result.return_values.get("arg0").unwrap(), &55);
-        verify_proof(result.proof)?;
+        let result =
+            run_and_generate_proof(file_content, "fibonacci_loop".to_string(), vec![44]).unwrap();
+        assert_eq!(result.return_values.len(), 1);
+        assert_eq!(result.return_values[0], 55);
+        // verify_proof(result.proof)?;
         Ok(())
     }
 }

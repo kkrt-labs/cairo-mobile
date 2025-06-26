@@ -15,7 +15,7 @@ import uniffi.cairo_m_bindings.VerifyResult as UniFFIVerifyResult
 // This is the data class that Expo Modules Kotlin will recognize and marshal.
 // It must implement `Record` and its fields should be marked with `@Field`.
 data class ExpoRunProofResult(
-    @Field val returnValue: Double,
+    @Field val returnValues: List<Double>,
     @Field val overallFrequency: Double,
     @Field val executionFrequency: Double,
     @Field val proofFrequency: Double,
@@ -30,7 +30,7 @@ data class ExpoVerifyResult(
 // Extension functions to easily convert between the UniFFI and Expo types
 fun UniFFIRunProofResult.toExpoRunProofResult(): ExpoRunProofResult =
     ExpoRunProofResult(
-        returnValue = this.returnValue.toDouble(),
+        returnValues = this.returnValues.map { it.toDouble() },
         overallFrequency = this.overallFrequency,
         executionFrequency = this.executionFrequency,
         proofFrequency = this.proofFrequency,
@@ -54,8 +54,9 @@ class CairoMBindingsModule : Module() {
             // The module will be accessible from `requireNativeModule('CairoMBindings')` in JavaScript.
             Name("CairoMBindings")
 
-            AsyncFunction("runAndGenerateProof") { programJsonStr: String ->
-                return@AsyncFunction runAndGenerateProof(programJsonStr).toExpoRunProofResult()
+            AsyncFunction("runAndGenerateProof") { programJsonStr: String, entrypointName: String, inputs: List<Double> ->
+                val inputsAsUInt = inputs.map { it.toUInt() }
+                return@AsyncFunction runAndGenerateProof(programJsonStr, entrypointName, inputsAsUInt).toExpoRunProofResult()
             }
 
             AsyncFunction("verifyProof") { proof: String ->

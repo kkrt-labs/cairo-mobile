@@ -50,7 +50,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           <Accordion title="Proof Results" defaultExpanded={true}>
             <ResultItem
               label="Result"
-              value={result.runProofResult.returnValue}
+              value={result.runProofResult.returnValues[0]}
             />
             <ResultItem
               label="Overall Frequency"
