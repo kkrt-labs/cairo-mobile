@@ -4,7 +4,7 @@
     "slug": "cairo-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/kkrt-logo.png",
     "scheme": "cairomobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,22 +18,29 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/icons/adaptive-kkrt-logo.png",
+        "monochromeImage": "./assets/icons/adaptive-kkrt-logo.png",
+        "backgroundColor": "#003D29"
       },
       "edgeToEdgeEnabled": true,
       "package": "org.kakarot.cairo_mobile"
-    },
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
     },
     "extra": {
       "eas": {
         "projectId": "b06a7ffa-d764-4c04-abf2-ffb7999164ae"
       }
     },
-    "owner": "kkrt-labs"
+    "owner": "kkrt-labs",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icons/splash-kkrt-logo.png",
+          "backgroundColor": "#003D29",
+          "resizeMode": "contain",
+          "imageWidth": 200
+        }
+      ]
+    ]
   }
 }
