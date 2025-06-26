@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
+import { StyleSheet, View, Text, ScrollView, Alert } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useState } from "react";
@@ -14,7 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Components
 import { ProgramDropdown, Program } from "../components/ProgramDropdown";
-import { NumberInput } from "../components/NumberInput";
+import { FIBONACCI_MAX_INPUT, NumberInput } from "../components/NumberInput";
 import { ActionButtons } from "../components/ActionButtons";
 import { ResultsDisplay } from "../components/ResultsDisplay";
 
@@ -56,6 +56,25 @@ function AppContent() {
   const currentProgramAvailable =
     Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
 
+  const handleGenerateProof = () => {
+    if (state.selectedProgram === "fibonacci") {
+      const numValue = parseInt(state.inputValue, 10);
+
+      if (numValue > FIBONACCI_MAX_INPUT) {
+        Alert.alert(
+          "Input Limit Exceeded",
+          `Program execution capped at 2^20 steps.
+
+Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
+          [{ text: "OK" }],
+        );
+        return; // Don't proceed with proof generation
+      }
+    }
+
+    generateProofMutation.mutate();
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -91,7 +110,7 @@ function AppContent() {
 
           {/* Action Buttons */}
           <ActionButtons
-            onGenerateProof={generateProofMutation.mutate}
+            onGenerateProof={handleGenerateProof}
             onVerifyProof={verifyProofMutation.mutate}
             isProofDisabled={
               !currentProgramAvailable || generateProofMutation.isPending
