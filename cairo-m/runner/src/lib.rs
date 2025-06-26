@@ -76,11 +76,8 @@ fn run_and_generate_proof(
         sonic_rs::from_str(&program_json_str).map_err(|e| MobileError::Json(e.to_string()))?;
 
     let entrypoint = compiled_program
-        .get_entrypoint(entrypoint_name.as_str())
-        .ok_or(MobileError::Vm(format!(
-            "Entrypoint {} not found",
-            entrypoint_name
-        )))?;
+        .get_entrypoint(&entrypoint_name)
+        .ok_or_else(|| MobileError::Vm(format!("Entrypoint {} not found", entrypoint_name)))?;
 
     let runner_inputs: Vec<M31> = inputs
         .iter()
@@ -98,14 +95,12 @@ fn run_and_generate_proof(
 
     let execution_duration = overall_start.elapsed();
 
-    println!("trace: {:?}", runner_output.vm.trace);
-
     // Proof Generation
 
     let proof_start = std::time::Instant::now();
-    let prover_input = import_from_runner_output(&runner_output)
+    let mut prover_input = import_from_runner_output(&runner_output)
         .map_err(|e| MobileError::Adapter(e.to_string()))?;
-    let proof = prove_cairo_m::<Blake2sMerkleChannel>(prover_input)
+    let proof = prove_cairo_m::<Blake2sMerkleChannel>(&mut prover_input)
         .map_err(|e| MobileError::Proof(e.to_string()))?;
 
     let proof_duration = proof_start.elapsed();
@@ -121,6 +116,7 @@ fn run_and_generate_proof(
     // Metrics Computation
 
     let num_steps = runner_output.vm.trace.len() as f64;
+    println!("num_steps: {}", num_steps);
     let execution_frequency = num_steps / execution_duration.as_secs_f64();
     let proof_frequency = num_steps / proof_duration.as_secs_f64();
     let overall_frequency = num_steps / overall_duration.as_secs_f64();
@@ -161,9 +157,10 @@ mod tests {
     fn test_fibonacci_program() -> Result<(), MobileError> {
         let file_content = fs::read_to_string("test_data/fibonacci_loop.json").unwrap();
         let result =
-            run_and_generate_proof(file_content, "fibonacci_loop".to_string(), vec![44]).unwrap();
+            run_and_generate_proof(file_content, "fibonacci_loop".to_string(), vec![116_507])
+                .unwrap();
         assert_eq!(result.return_values.len(), 1);
-        assert_eq!(result.return_values[0], 55);
+        assert_eq!(result.return_values[0], 394756528);
         // verify_proof(result.proof)?;
         Ok(())
     }
