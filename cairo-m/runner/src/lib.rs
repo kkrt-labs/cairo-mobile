@@ -161,7 +161,7 @@ mod tests {
                 .unwrap();
         assert_eq!(result.return_values.len(), 1);
         assert_eq!(result.return_values[0], 394756528);
-        // verify_proof(result.proof)?;
+        verify_proof(result.proof)?;
         Ok(())
     }
 }
