@@ -3,7 +3,7 @@
  *
  * ## Fields
  *
- * * `returnValue` - The return value of the program
+ * * `returnValues` - The return values of the program
  * * `overallFrequency` - The frequency of the execution and proof generation, in Hz
  * * `executionFrequency` - The frequency of the execution, in Hz
  * * `proofFrequency` - The frequency of the proof generation, in Hz
@@ -11,7 +11,7 @@
  * * `proof` - The proof of the program
  */
 export type RunProofResult = {
-  returnValue: number;
+  returnValues: number[];
   overallFrequency: number;
   executionFrequency: number;
   proofFrequency: number;

@@ -10,11 +10,12 @@ public class CairoMBindingsModule: Module {
     // The module will be accessible from `requireNativeModule('CairoMBindings')` in JavaScript.
     Name("CairoMBindings")
 
-    AsyncFunction("runAndGenerateProof") { (programJsonStr: String) -> [String: Any] in
+    AsyncFunction("runAndGenerateProof") { (programJsonStr: String, entrypointName: String, inputs: [Double]) -> [String: Any] in
       do {
-        let result = try runAndGenerateProof(programJsonStr: programJsonStr)
+        let inputsAsUInt32 = inputs.map { UInt32($0) }
+        let result = try runAndGenerateProof(programJsonStr: programJsonStr, entrypointName: entrypointName, inputs: inputsAsUInt32)
         return [
-          "returnValue": result.returnValue,
+          "returnValues": result.returnValues.map { Double($0) },
           "overallFrequency": result.overallFrequency,
           "executionFrequency": result.executionFrequency,
           "proofFrequency": result.proofFrequency,

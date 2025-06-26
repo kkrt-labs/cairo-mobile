@@ -9,15 +9,26 @@ interface NumberInputProps {
   label?: string;
 }
 
+export const FIBONACCI_MAX_INPUT = 116507;
+
 export const NumberInput: React.FC<NumberInputProps> = ({
   value,
   onValueChange,
   placeholder = "Enter a number",
 }) => {
+  // Check if the current value is valid for fibonacci input
+  const isValidFibonacci = () => {
+    if (!value) return true; // Empty input is valid (allows user to type)
+    const numValue = parseInt(value, 10);
+    return !isNaN(numValue) && numValue >= 0 && numValue <= FIBONACCI_MAX_INPUT;
+  };
+
+  const isValid = isValidFibonacci();
+
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, !isValid && styles.inputInvalid]}
         value={value}
         onChangeText={onValueChange}
         placeholder={placeholder}
@@ -44,5 +55,9 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     color: colors.onBackground,
     textAlign: "center",
+  },
+  inputInvalid: {
+    borderColor: "#ef4444", // Red border for invalid input
+    backgroundColor: "#fef2f2", // Light red background
   },
 });
