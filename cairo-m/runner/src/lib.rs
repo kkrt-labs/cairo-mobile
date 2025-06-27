@@ -116,7 +116,6 @@ fn run_and_generate_proof(
     // Metrics Computation
 
     let num_steps = runner_output.vm.trace.len() as f64;
-    println!("num_steps: {}", num_steps);
     let execution_frequency = num_steps / execution_duration.as_secs_f64();
     let proof_frequency = num_steps / proof_duration.as_secs_f64();
     let overall_frequency = num_steps / overall_duration.as_secs_f64();

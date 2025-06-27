@@ -318,7 +318,7 @@ async function setupIOSPlatform(rustTarget) {
   ); // Distinguish by type for now
 
   await checkFileContent(
-    path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),
+    path.join(EXPO_MODULE_DIR, "ios", "CairoMBindings.podspec"),
     "s.vendored_libraries",
     "Podspec `s.vendored_libraries`",
   );
