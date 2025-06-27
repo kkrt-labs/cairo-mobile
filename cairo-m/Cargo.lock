@@ -362,7 +362,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-common"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "num-traits",
  "serde",
@@ -374,7 +374,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -396,7 +396,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-codegen"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "cairo-m-common",
  "cairo-m-compiler-diagnostics",
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -428,7 +428,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-mir"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "cairo-m-compiler-diagnostics",
  "cairo-m-compiler-parser",
@@ -443,7 +443,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-parser"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "ariadne",
  "cairo-m-compiler-diagnostics",
@@ -461,7 +461,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-compiler-semantic"
 version = "0.1.0"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "ariadne",
  "bitflags",
@@ -484,7 +484,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-prover"
 version = "0.1.1"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "bytemuck",
  "cairo-m-common",
@@ -506,7 +506,7 @@ dependencies = [
 [[package]]
 name = "cairo-m-runner"
 version = "0.1.1"
-source = "git+https://github.com/kkrt-labs/cairo-m#720e554476e4497fc9e72c80645e4053f92a6763"
+source = "git+https://github.com/kkrt-labs/cairo-m#ca49f5961620aead146de363645301287a601382"
 dependencies = [
  "anyhow",
  "cairo-m-common",
@@ -1006,9 +1006,9 @@ checksum = "44faf5bb8861a9c72e20d3fb0fdbd59233e43056e2b80475ab0aacdc2e781355"
 
 [[package]]
 name = "indexmap"
-version = "2.9.0"
+version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
+checksum = "fe4cd85333e22411419a0bcae1297d25e58c9443848b11dc6a86fefe8c78a661"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.4",
