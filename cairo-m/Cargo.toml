@@ -14,14 +14,19 @@ thiserror = "2.0.12"
 sonic-rs = "0.5.1"
 stwo-prover = { git = "https://github.com/starkware-libs/stwo", features = [
   "parallel",
-], rev = "8b5436d" }
+], rev = "ab57a1c" }
 uniffi = { version = "0.29.3", features = ["cli"] }
 
 
 [profile.release]
 opt-level = 3
-lto = true
+lto = "thin"
 codegen-units = 1
 panic = "abort"
 strip = true
 overflow-checks = false
+
+# Custom profile for Android builds to preserve UniFFI symbols
+[profile.android-release]
+inherits = "release"
+strip = false

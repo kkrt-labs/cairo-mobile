@@ -195,7 +195,8 @@ async function setupAndroidPlatform(rustTarget) {
       ANDROID_PLATFORM_VERSION,
       "--", // Separator for cargo build args
       "build",
-      "--release",
+      "--profile",
+      "android-release",
       "--lib",
     ],
     { cwd: RUST_PROJECT_DIR },
@@ -206,7 +207,7 @@ async function setupAndroidPlatform(rustTarget) {
     RUST_PROJECT_DIR,
     "target",
     rustTarget.arch,
-    "release",
+    "android-release",
     rustTarget.libName,
   );
 
