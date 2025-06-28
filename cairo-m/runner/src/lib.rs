@@ -95,17 +95,6 @@ fn run_and_generate_proof(
 
     let execution_duration = overall_start.elapsed();
 
-    // Proof Generation
-
-    let proof_start = std::time::Instant::now();
-    let mut prover_input = import_from_runner_output(&runner_output)
-        .map_err(|e| MobileError::Adapter(e.to_string()))?;
-    let proof = prove_cairo_m::<Blake2sMerkleChannel>(&mut prover_input)
-        .map_err(|e| MobileError::Proof(e.to_string()))?;
-
-    let proof_duration = proof_start.elapsed();
-    let overall_duration = overall_start.elapsed();
-
     // Return values
     let return_values = runner_output
         .return_values
@@ -114,8 +103,19 @@ fn run_and_generate_proof(
         .collect();
 
     // Metrics Computation
-
     let num_steps = runner_output.vm.trace.len() as f64;
+
+    // Proof Generation
+
+    let proof_start = std::time::Instant::now();
+    let mut prover_input = import_from_runner_output(runner_output)
+        .map_err(|e| MobileError::Adapter(e.to_string()))?;
+    let proof = prove_cairo_m::<Blake2sMerkleChannel>(&mut prover_input)
+        .map_err(|e| MobileError::Proof(e.to_string()))?;
+
+    let proof_duration = proof_start.elapsed();
+    let overall_duration = overall_start.elapsed();
+
     let execution_frequency = num_steps / execution_duration.as_secs_f64();
     let proof_frequency = num_steps / proof_duration.as_secs_f64();
     let overall_frequency = num_steps / overall_duration.as_secs_f64();
