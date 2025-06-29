@@ -34,7 +34,6 @@ export const ProgramDropdown: React.FC<ProgramDropdownProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[typography.sectionTitle, styles.title]}>Program</Text>
       <View style={styles.dropdownContainer}>
         <Pressable
           style={({ pressed }) => [
@@ -106,10 +105,7 @@ export const ProgramDropdown: React.FC<ProgramDropdownProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
-  },
-  title: {
-    textAlign: "center",
+    // Removed gap: 16 to eliminate spacing
   },
   dropdownContainer: {
     position: "relative",

@@ -27,6 +27,10 @@ pub enum MobileError {
 /// # Fields
 ///
 /// * `return_values` - The return values of the program
+/// * `num_steps` - The number of execution steps
+/// * `overall_duration` - The total time for execution and proof generation, in seconds
+/// * `execution_duration` - The time for execution, in seconds
+/// * `proof_duration` - The time for proof generation, in seconds
 /// * `overall_frequency` - The frequency of the execution and proof generation, in Hz
 /// * `execution_frequency` - The frequency of the execution, in Hz
 /// * `proof_frequency` - The frequency of the proof generation, in Hz
@@ -35,6 +39,10 @@ pub enum MobileError {
 #[derive(Debug, uniffi::Record)]
 pub struct RunProofResult {
     pub return_values: Vec<u32>,
+    pub num_steps: u32,
+    pub overall_duration: f64,
+    pub execution_duration: f64,
+    pub proof_duration: f64,
     pub overall_frequency: f64,
     pub execution_frequency: f64,
     pub proof_frequency: f64,
@@ -103,7 +111,8 @@ fn run_and_generate_proof(
         .collect();
 
     // Metrics Computation
-    let num_steps = runner_output.vm.trace.len() as f64;
+    let num_steps = runner_output.vm.trace.len() as u32;
+    let num_steps_f64 = num_steps as f64;
 
     // Proof Generation
 
@@ -116,15 +125,24 @@ fn run_and_generate_proof(
     let proof_duration = proof_start.elapsed();
     let overall_duration = overall_start.elapsed();
 
-    let execution_frequency = num_steps / execution_duration.as_secs_f64();
-    let proof_frequency = num_steps / proof_duration.as_secs_f64();
-    let overall_frequency = num_steps / overall_duration.as_secs_f64();
+    // Convert durations to seconds
+    let execution_duration_secs = execution_duration.as_secs_f64();
+    let proof_duration_secs = proof_duration.as_secs_f64();
+    let overall_duration_secs = overall_duration.as_secs_f64();
+
+    let execution_frequency = num_steps_f64 / execution_duration_secs;
+    let proof_frequency = num_steps_f64 / proof_duration_secs;
+    let overall_frequency = num_steps_f64 / overall_duration_secs;
 
     let proof_size = proof.stark_proof.size_estimate() as u32;
     let proof_json = sonic_rs::to_string(&proof).map_err(|e| MobileError::Json(e.to_string()))?;
 
     Ok(RunProofResult {
         return_values,
+        num_steps,
+        overall_duration: overall_duration_secs,
+        execution_duration: execution_duration_secs,
+        proof_duration: proof_duration_secs,
         overall_frequency,
         execution_frequency,
         proof_frequency,
