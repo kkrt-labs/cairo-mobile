@@ -28,5 +28,5 @@ export type RunProofResult = {
 };
 
 export type VerifyResult = {
-  verificationTime: number;
+  verificationDuration: number;
 };

@@ -28,7 +28,7 @@ data class ExpoRunProofResult(
 ) : Record
 
 data class ExpoVerifyResult(
-    @Field val verificationTime: Double,
+    @Field val verificationDuration: Double,
 ) : Record
 
 // Extension functions to easily convert between the UniFFI and Expo types
@@ -48,7 +48,7 @@ fun UniFFIRunProofResult.toExpoRunProofResult(): ExpoRunProofResult =
 
 fun UniFFIVerifyResult.toExpoVerifyResult(): ExpoVerifyResult =
     ExpoVerifyResult(
-        verificationTime = this.verificationTime.toDouble(),
+        verificationDuration = this.verificationDuration.toDouble(),
     )
 
 class CairoMBindingsModule : Module() {

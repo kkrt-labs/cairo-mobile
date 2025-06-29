@@ -52,7 +52,7 @@ pub struct RunProofResult {
 
 #[derive(Debug, uniffi::Record)]
 pub struct VerifyResult {
-    pub verification_time: f64,
+    pub verification_duration: f64,
 }
 
 /// Runs a compiled Cairo program and generate a proof of execution.
@@ -160,7 +160,7 @@ fn verify_proof(proof: String) -> Result<VerifyResult, MobileError> {
         .map_err(|e| MobileError::Verification(e.to_string()))?;
 
     Ok(VerifyResult {
-        verification_time: verification_start.elapsed().as_secs_f64(),
+        verification_duration: verification_start.elapsed().as_secs_f64(),
     })
 }
 

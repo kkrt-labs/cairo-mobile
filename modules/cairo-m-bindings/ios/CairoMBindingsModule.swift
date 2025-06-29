@@ -40,7 +40,7 @@ public class CairoMBindingsModule: Module {
     AsyncFunction("verifyProof") { (proof: String) -> [String: Any] in
       do {
         let result = try verifyProof(proof: proof)
-        return ["verificationTime": result.verificationTime]
+        return ["verificationDuration": result.verificationDuration]
       }
     }
   }

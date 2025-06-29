@@ -52,9 +52,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       <View style={styles.accordionContainer}>
         {/* Overall Results */}
         {showProof && (
-          <Accordion title="Overall Results" defaultExpanded={true}>
+          <Accordion title="Global Results" defaultExpanded={true}>
             <ResultItem
-              label="Result"
+              label="Fibonacci Value"
               value={result.runProofResult.returnValues[0]}
             />
             <ResultItem
@@ -62,11 +62,11 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               value={formatSteps(result.runProofResult.numSteps)}
             />
             <ResultItem
-              label="Overall Duration"
+              label="Execution + Proof Duration"
               value={formatTime(result.runProofResult.overallDuration)}
             />
             <ResultItem
-              label="Overall Frequency"
+              label="Execution + Proof Frequency"
               value={formatFrequency(result.runProofResult.overallFrequency)}
             />
           </Accordion>
@@ -106,12 +106,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
         {/* Verification Results */}
         {showVerification && result.verifyResult && (
-          <Accordion title="Verification Results" defaultExpanded={true}>
-            <ResultItem
-              label="Verification Time"
-              value={formatTime(result.verifyResult.verificationTime)}
-            />
-          </Accordion>
+          <ResultItem
+            label="Verification Duration"
+            value={formatTime(result.verifyResult.verificationDuration)}
+          />
         )}
       </View>
     </View>
