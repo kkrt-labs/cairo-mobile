@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    gap: 16, // Reduced from 24 to 16
+    gap: 16,
     paddingBottom: 24,
   },
   errorContainer: {
@@ -226,9 +226,9 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   inputSection: {
-    gap: 12, // Tight spacing between program dropdown and input
+    gap: 12,
   },
   resultsSection: {
-    marginTop: -8, // Negative margin to bring results closer to action buttons
+    marginTop: -8,
   },
 });

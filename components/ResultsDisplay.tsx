@@ -50,7 +50,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.accordionContainer}>
-        {/* Overall Results */}
+        {/* Global Results */}
         {showProof && (
           <Accordion title="Global Results" defaultExpanded={true}>
             <ResultItem
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "baseline",
-    paddingVertical: 4, // Reduced from 8 to 4
+    paddingVertical: 4,
   },
   compactResultLabel: {
-    fontSize: 14, // Reduced from 16
+    fontSize: 14,
     fontWeight: "400",
     color: colors.onBackground,
     fontFamily: "Inter_400Regular",
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   compactResultValue: {
-    fontSize: 18, // Reduced from 24
+    fontSize: 18,
     fontWeight: "700",
     color: colors.secondary,
     fontFamily: "Inter_700Bold",
