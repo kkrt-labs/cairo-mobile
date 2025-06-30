@@ -1,16 +1,9 @@
 /**
- * A serializable wrapper for NoirProof that can be safely passed across the FFI boundary
- */
-export type NoirProofWrapper = {
-  /** The serialized proof data */
-  proofData: string;
-};
-
-/**
  * The result and metrics of a successful Noir proof generation.
  *
  * ## Fields
  *
+ * * `returnValue` - The return value of the circuit execution as a JSON string
  * * `overallDuration` - The total time for witness generation and proof generation, in seconds
  * * `witnessGenerationDuration` - The time for witness generation, in seconds
  * * `proofGenerationDuration` - The time for proof generation, in seconds
@@ -19,9 +12,10 @@ export type NoirProofWrapper = {
  * * `proofGenerationFrequency` - The frequency of proof generation, in Hz (based on constraint count)
  * * `proofSize` - The size of the proof, in bytes
  * * `constraintCount` - The number of constraints in the circuit
- * * `proof` - The proof wrapper containing the serialized proof
+ * * `proof` - The proof as a serialized string
  */
 export type NoirProofResult = {
+  returnValue: string;
   overallDuration: number;
   witnessGenerationDuration: number;
   proofGenerationDuration: number;
@@ -30,7 +24,7 @@ export type NoirProofResult = {
   proofGenerationFrequency: number;
   proofSize: number;
   constraintCount: number;
-  proof: NoirProofWrapper;
+  proof: string;
 };
 
 /**

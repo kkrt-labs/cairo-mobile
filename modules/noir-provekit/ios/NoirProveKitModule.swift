@@ -14,6 +14,7 @@ public class NoirProveKitModule: Module {
       do {
         let result = try generateProof(circuitJsonStr: circuitJsonStr, inputJsonStr: inputJsonStr)
         return [
+          "returnValue": result.returnValue,
           "overallDuration": result.overallDuration,
           "witnessGenerationDuration": result.witnessGenerationDuration,
           "proofGenerationDuration": result.proofGenerationDuration,
@@ -22,9 +23,7 @@ public class NoirProveKitModule: Module {
           "proofGenerationFrequency": result.proofGenerationFrequency,
           "proofSize": result.proofSize,
           "constraintCount": result.constraintCount,
-          "proof": [
-            "proofData": result.proof.proofData
-          ]
+          "proof": result.proof
         ]
       } catch {
         throw NSError(
@@ -37,18 +36,15 @@ public class NoirProveKitModule: Module {
       }
     }
 
-    AsyncFunction("verifyProof") { (circuitJsonStr: String, proof: [String: String]) -> [String: Any] in
+    AsyncFunction("verifyProof") { (circuitJsonStr: String, proof: String) -> [String: Any] in
       do {
-        guard let proofData = proof["proofData"] else {
           throw NSError(
             domain: "NoirProveKit",
             code: 2,
             userInfo: [NSLocalizedDescriptionKey: "Invalid proof format"]
-          )
-        }
+        )
 
-        let proofWrapper = NoirProofWrapper(proofData: proofData)
-        let result = try verifyProof(circuitJsonStr: circuitJsonStr, proof: proofWrapper)
+        let result = try verifyProof(circuitJsonStr: circuitJsonStr, proof: proof)
         return ["verificationDuration": result.verificationDuration]
       } catch {
         throw NSError(

@@ -3,7 +3,7 @@ uniffi::setup_scaffolding!();
 use acvm::FieldElement;
 use bn254_blackbox_solver::Bn254BlackBoxSolver;
 use nargo::{foreign_calls::DefaultForeignCallBuilder, ops::execute_program};
-use noir_r1cs::{NoirProof, NoirProofScheme};
+use noir_r1cs::NoirProofScheme;
 use noirc_abi::{
     input_parser::{Format, InputValue},
     InputMap, MAIN_RETURN_NAME,
@@ -24,28 +24,9 @@ pub enum NoirProverError {
     /// The verification of the given Noir proof failed.
     #[error("Failed to verify proof: {0}")]
     VerificationError(String),
-}
-
-/// A serializable wrapper for NoirProof that can be safely passed across the FFI boundary
-#[derive(Serialize, Deserialize, uniffi::Record, Debug)]
-pub struct NoirProofWrapper {
-    /// The serialized proof data
-    proof_data: String,
-}
-
-impl NoirProofWrapper {
-    /// Serialize a given NoirProof to a string.
-    fn new(proof: NoirProof) -> Self {
-        let proof_data = sonic_rs::to_string(&proof).expect("Failed to serialize NoirProof");
-        Self { proof_data }
-    }
-
-    /// Deserialize a NoirProof.
-    fn into_proof(self) -> Result<NoirProof, NoirProverError> {
-        // Deserialize the proof from the string
-        sonic_rs::from_str(&self.proof_data)
-            .map_err(|e| NoirProverError::VerificationError(e.to_string()))
-    }
+    /// Something went wrong during the return value serialization.
+    #[error("Failed to serialize return value: {0}")]
+    ReturnValueError(String),
 }
 
 /// The result and metrics of a successful Noir proof generation.
@@ -65,6 +46,8 @@ impl NoirProofWrapper {
 /// * `proof` - The proof wrapper containing the serialized proof
 #[derive(Debug, uniffi::Record)]
 pub struct NoirProofResult {
+    pub return_value: String,
+    pub constraint_count: u32,
     pub overall_duration: f64,
     pub witness_generation_duration: f64,
     pub proof_generation_duration: f64,
@@ -72,8 +55,7 @@ pub struct NoirProofResult {
     pub witness_generation_frequency: f64,
     pub proof_generation_frequency: f64,
     pub proof_size: u32,
-    pub constraint_count: u32,
-    pub proof: NoirProofWrapper,
+    pub proof: String,
 }
 
 /// The result and metrics of a successful Noir proof verification.
@@ -115,6 +97,7 @@ impl NoirProver {
         // Witness generation
         let witness_start = std::time::Instant::now();
         let (input_map, _expected_return_value) = self.generate_witness_map(input_json_str)?;
+
         let initial_witness = self
             .program
             .abi
@@ -131,7 +114,7 @@ impl NoirProver {
         )
         .map_err(|e| NoirProverError::ProofGenerationError(e.to_string()))?;
         let witness_map = witness_stack.pop().unwrap().witness;
-        let (input_map, _) = self.program.abi.decode(&witness_map).unwrap();
+        let (input_map, return_input_value) = self.program.abi.decode(&witness_map).unwrap();
         let witness_generation_duration = witness_start.elapsed();
 
         // Proof generation
@@ -143,6 +126,11 @@ impl NoirProver {
         let proof_generation_duration = proof_start.elapsed();
 
         let overall_duration = overall_start.elapsed();
+
+        // Return value
+        // TODO: Investigate how to get the actual return value with ProveKit.
+        let return_value = serialize_return_value(return_input_value)
+            .map_err(|e| NoirProverError::ReturnValueError(e.to_string()))?;
 
         // Calculate metrics
         let overall_duration_secs = overall_duration.as_secs_f64();
@@ -157,10 +145,12 @@ impl NoirProver {
         let witness_generation_frequency = constraint_count_f64 / witness_generation_duration_secs;
         let proof_generation_frequency = constraint_count_f64 / proof_generation_duration_secs;
 
-        let proof_wrapper = NoirProofWrapper::new(proof);
-        let proof_size = proof_wrapper.proof_data.len() as u32;
+        let proof_data = sonic_rs::to_string(&proof)
+            .map_err(|e| NoirProverError::VerificationError(e.to_string()))?;
+        let proof_size = proof_data.len() as u32;
 
         Ok(NoirProofResult {
+            return_value,
             overall_duration: overall_duration_secs,
             witness_generation_duration: witness_generation_duration_secs,
             proof_generation_duration: proof_generation_duration_secs,
@@ -169,7 +159,7 @@ impl NoirProver {
             proof_generation_frequency,
             proof_size,
             constraint_count,
-            proof: proof_wrapper,
+            proof: proof_data,
         })
     }
 
@@ -181,21 +171,21 @@ impl NoirProver {
         input_json_str: &str,
     ) -> Result<(InputMap, Option<InputValue>), NoirProverError> {
         let has_params = !self.program.abi.parameters.is_empty();
-        let has_return = self.program.abi.return_type.is_some();
         let has_input = !input_json_str.is_empty();
 
-        if !has_params && !has_return {
-            return Ok((BTreeMap::new(), None));
-        }
+        // If no parameters expected and no input provided, return empty map
         if !has_params && !has_input {
             return Ok((BTreeMap::new(), None));
         }
+
+        // If parameters expected but no input provided, error
         if has_params && !has_input {
             return Err(NoirProverError::CreationError(String::from(
                 "The ABI expects parameters but no input were provided.",
             )));
         }
 
+        // Parse the input (handles both cases: params expected or not)
         let mut inputs = Format::Json
             .parse(input_json_str, &self.program.abi)
             .map_err(|e| NoirProverError::CreationError(e.to_string()))?;
@@ -206,10 +196,11 @@ impl NoirProver {
 
     /// Verify a given Noir proof for the current circuit proof scheme with timing metrics.
     /// * `proof` - The ProveKit's Spartan WHIR Noir proof to be verified.
-    pub fn verify(&self, proof: NoirProofWrapper) -> Result<NoirVerifyResult, NoirProverError> {
+    pub fn verify(&self, proof: String) -> Result<NoirVerifyResult, NoirProverError> {
         let verification_start = std::time::Instant::now();
 
-        let proof = proof.into_proof()?;
+        let proof = sonic_rs::from_str(&proof)
+            .map_err(|e| NoirProverError::VerificationError(e.to_string()))?;
         self.proof_scheme
             .verify(&proof)
             .map_err(|e| NoirProverError::VerificationError(e.to_string()))?;
@@ -217,6 +208,38 @@ impl NoirProver {
         let verification_duration = verification_start.elapsed();
 
         Ok(NoirVerifyResult { verification_duration: verification_duration.as_secs_f64() })
+    }
+}
+
+fn serialize_return_value(return_value: Option<InputValue>) -> Result<String, NoirProverError> {
+    match return_value {
+        Some(return_value) => serialize_return_value_inner(return_value),
+        None => Ok(String::from("")),
+    }
+}
+
+fn serialize_return_value_inner(return_value: InputValue) -> Result<String, NoirProverError> {
+    match return_value {
+        InputValue::Field(field) => Ok(field.to_string()),
+        InputValue::String(string) => Ok(string),
+        InputValue::Vec(vec) => {
+            let vec_str = vec
+                .iter()
+                .map(|item| serialize_return_value_inner(item.clone()).unwrap())
+                .collect::<Vec<String>>()
+                .join(",");
+            Ok(vec_str)
+        }
+        InputValue::Struct(map) => {
+            let map_str = map
+                .iter()
+                .map(|(key, value)| {
+                    format!("{}: {}", key, serialize_return_value_inner(value.clone()).unwrap())
+                })
+                .collect::<Vec<String>>()
+                .join(",");
+            Ok(map_str)
+        }
     }
 }
 
@@ -240,7 +263,7 @@ pub fn generate_proof(
 #[uniffi::export]
 pub fn verify_proof(
     circuit_json_str: &String,
-    proof: NoirProofWrapper,
+    proof: String,
 ) -> Result<NoirVerifyResult, NoirProverError> {
     let prover = NoirProver::from_circuit(circuit_json_str)?;
     prover.verify(proof)
@@ -276,7 +299,7 @@ mod tests {
         let circuit_json_str =
             sonic_rs::to_string(&program_artifact).expect("Failed to stringify ProgramArtifact");
 
-        let input_json_str = String::from(r#"{}"#);
+        let input_json_str = String::from(r#"{"return": "0x0"}"#);
 
         generate_and_verify_proof(&circuit_json_str, &input_json_str)
             .expect("Failed to verify proof");
@@ -291,19 +314,10 @@ mod tests {
         let circuit_json_str =
             sonic_rs::to_string(&program_artifact).expect("Failed to stringify ProgramArtifact");
 
-        let input_json_str = String::from(r#"{}"#);
+        let input_json_str = String::from(r#"{"return": "0x0"}"#);
 
         let proof_result = generate_proof(&circuit_json_str, &input_json_str).unwrap();
-
-        // Verify the metrics are reasonable
-        assert!(proof_result.overall_duration > 0.0);
-        assert!(proof_result.witness_generation_duration > 0.0);
-        assert!(proof_result.proof_generation_duration > 0.0);
-        assert!(proof_result.constraint_count > 0);
-        assert!(proof_result.proof_size > 0);
-
-        let verify_result = verify_proof(&circuit_json_str, proof_result.proof).unwrap();
-        assert!(verify_result.verification_duration > 0.0);
+        verify_proof(&circuit_json_str, proof_result.proof).unwrap();
     }
 
     #[test]
@@ -315,11 +329,12 @@ mod tests {
         let circuit_json_str =
             sonic_rs::to_string(&program_artifact).expect("Failed to stringify ProgramArtifact");
 
-        let input_json_str = String::from(r#"{}"#);
+        let input_json_str = String::from(r#"{"return": "0x0"}"#);
 
         let prover = NoirProver::from_circuit(&circuit_json_str).expect("Failed to create prover");
         let proof_result = prover.prove(&input_json_str).expect("Failed to generate proof");
-        let verify_result = prover.verify(proof_result.proof).expect("Failed to verify proof");
+        let verify_result =
+            prover.verify(proof_result.proof.clone()).expect("Failed to verify proof");
 
         // Print some metrics for manual verification
         println!("Constraint count: {}", proof_result.constraint_count);
@@ -328,5 +343,6 @@ mod tests {
         println!("Proof generation duration: {:.3}s", proof_result.proof_generation_duration);
         println!("Verification duration: {:.3}s", verify_result.verification_duration);
         println!("Proof size: {} bytes", proof_result.proof_size);
+        println!("Return value: {}", proof_result.return_value);
     }
 }

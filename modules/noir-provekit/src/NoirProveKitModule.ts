@@ -1,19 +1,12 @@
 import { NativeModule, requireNativeModule } from "expo";
-import {
-  NoirProofResult,
-  NoirVerifyResult,
-  NoirProofWrapper,
-} from "./NoirProveKit.types";
+import { NoirProofResult, NoirVerifyResult } from "./NoirProveKit.types";
 
 declare class NoirProveKitModule extends NativeModule {
   generateProof(
     circuitJsonStr: string,
     inputJsonStr: string,
   ): Promise<NoirProofResult>;
-  verifyProof(
-    circuitJsonStr: string,
-    proof: NoirProofWrapper,
-  ): Promise<NoirVerifyResult>;
+  verifyProof(circuitJsonStr: string, proof: string): Promise<NoirVerifyResult>;
   generateAndVerifyProof(
     circuitJsonStr: string,
     inputJsonStr: string,
