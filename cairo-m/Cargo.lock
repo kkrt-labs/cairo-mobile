@@ -353,7 +353,7 @@ dependencies = [
  "cairo-m-common",
  "cairo-m-prover",
  "cairo-m-runner",
- "sonic-rs 0.5.1",
+ "sonic-rs 0.5.2",
  "stwo-prover",
  "thiserror 2.0.12",
  "uniffi",
@@ -497,7 +497,7 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "sonic-rs 0.5.1",
+ "sonic-rs 0.5.2",
  "stwo-air-utils",
  "stwo-air-utils-derive",
  "stwo-constraint-framework",
@@ -516,7 +516,7 @@ dependencies = [
  "cairo-m-compiler",
  "clap",
  "num-traits",
- "sonic-rs 0.5.1",
+ "sonic-rs 0.5.2",
  "stwo-prover",
  "thiserror 2.0.12",
 ]
@@ -1785,9 +1785,9 @@ dependencies = [
 
 [[package]]
 name = "sonic-rs"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93070f7e7c0d7ec7d08406b1b407234af30420320fd854f304029e3c6db4a899"
+checksum = "7be54789747a46a8b1eb7b2c9cb0879cd7559a5f71bfff950868369f6868b9ad"
 dependencies = [
  "ahash",
  "bumpalo",

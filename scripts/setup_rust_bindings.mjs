@@ -9,20 +9,26 @@ const __dirname = path.dirname(__filename);
 
 // --- Configuration ---
 const PROJECT_ROOT_DIR = path.resolve(__dirname, "..");
-const RUST_PROJECT_DIR = path.join(PROJECT_ROOT_DIR, "cairo-m");
-const EXPO_MODULE_DIR = path.join(
-  PROJECT_ROOT_DIR,
-  "modules",
-  "cairo-m-bindings",
-);
-
 const ANDROID_PLATFORM_VERSION = "21"; // From your module's build.gradle minSdkVersion
+
+// Module configurations
+const MODULES = {
+  "cairo-m": {
+    rustProjectDir: "cairo-m",
+    expoModuleDir: "cairo-m-bindings",
+    libBaseName: "cairo_m_bindings",
+  },
+  "noir-provekit": {
+    rustProjectDir: "noir_provekit",
+    expoModuleDir: "noir-provekit",
+    libBaseName: "noir_provekit",
+  },
+};
 
 const ANDROID_TARGETS = [
   {
     arch: "aarch64-linux-android",
     jniLibsSubdir: "arm64-v8a",
-    libName: "libcairo_m_bindings.so",
   },
 ];
 
@@ -30,17 +36,14 @@ const IOS_TARGETS = [
   {
     arch: "aarch64-apple-ios-sim",
     type: "simulator",
-    libName: "libcairo_m_bindings.a",
   },
   {
     arch: "aarch64-apple-ios",
     type: "device",
-    libName: "libcairo_m_bindings.a",
   },
-  // TODO: Potentially x86_64-apple-ios for older simulators, but aarch64-apple-ios-sim covers modern ones
 ];
 
-const DEFAULT_ANDROID_TARGET = ANDROID_TARGETS[0]; // aarch64-linux-android
+const DEFAULT_ANDROID_TARGET = ANDROID_TARGETS[0];
 const DEFAULT_IOS_SIM_TARGET = IOS_TARGETS.find((t) => t.type === "simulator");
 const DEFAULT_IOS_DEVICE_TARGET = IOS_TARGETS.find((t) => t.type === "device");
 
@@ -178,43 +181,45 @@ async function checkFileContent(filePath, searchString, expectedMessage) {
 }
 
 // --- Platform Specific Setup ---
+async function setupAndroidPlatform(moduleConfig, rustTarget) {
+  const { rustProjectDir, expoModuleDir, libBaseName } = moduleConfig;
+  const rustProjectPath = path.join(PROJECT_ROOT_DIR, rustProjectDir);
+  const expoModulePath = path.join(PROJECT_ROOT_DIR, "modules", expoModuleDir);
 
-async function setupAndroidPlatform(rustTarget) {
   printHeader(
-    `Android: Building Rust for ${rustTarget.arch} and Generating Kotlin Bindings`,
+    `Android: Building ${libBaseName} for ${rustTarget.arch} and Generating Kotlin Bindings`,
   );
 
   console.log(`Compiling Rust for Android target: ${rustTarget.arch}`);
-  await executeCommand(
-    "cargo",
-    [
-      "ndk",
-      "--target",
-      rustTarget.arch,
-      "--platform",
-      ANDROID_PLATFORM_VERSION,
-      "--", // Separator for cargo build args
-      "build",
-      "--profile",
-      "android-release",
-      "--lib",
-    ],
-    { cwd: RUST_PROJECT_DIR },
-  );
+  const buildArgs = [
+    "ndk",
+    "--target",
+    rustTarget.arch,
+    "--platform",
+    ANDROID_PLATFORM_VERSION,
+    "--", // Separator for cargo build args
+    "build",
+    "--profile",
+    "android-release",
+    "--lib",
+  ];
+
+  await executeCommand("cargo", buildArgs, { cwd: rustProjectPath });
   console.log("Rust compilation for Android complete.");
 
+  const libName = `lib${libBaseName}.so`;
   const libraryPath = path.join(
-    RUST_PROJECT_DIR,
+    rustProjectPath,
     "target",
     rustTarget.arch,
     "android-release",
-    rustTarget.libName,
+    libName,
   );
 
   console.log("Generating Kotlin bindings for Android");
   // Generate directly to the Android module's Java source directory
   const kotlinDestDir = path.join(
-    EXPO_MODULE_DIR,
+    expoModulePath,
     "android",
     "src",
     "main",
@@ -235,63 +240,64 @@ async function setupAndroidPlatform(rustTarget) {
       "--out-dir",
       kotlinDestDir,
     ],
-    { cwd: RUST_PROJECT_DIR },
+    { cwd: rustProjectPath },
   );
   console.log("Kotlin bindings generated directly to module.");
 
-  console.log("Copying Android artifacts to zk-bindings module");
+  console.log(`Copying Android artifacts to ${expoModuleDir} module`);
   const androidJniDir = path.join(
-    EXPO_MODULE_DIR,
+    expoModulePath,
     "android",
     "src",
     "main",
     "jniLibs",
     rustTarget.jniLibsSubdir,
   );
-  await copyFile(libraryPath, path.join(androidJniDir, rustTarget.libName));
+  await copyFile(libraryPath, path.join(androidJniDir, libName));
 
   await checkFileContent(
-    path.join(EXPO_MODULE_DIR, "android", "build.gradle"),
+    path.join(expoModulePath, "android", "build.gradle"),
     "net.java.dev.jna:jna",
-    "JNA dependency 'net.java.dev.jna:jna:5.13.0@aar'",
+    "JNA dependency 'net.java.dev.jna:jna'",
   );
-  console.log(`Android setup for ${rustTarget.arch} complete.`);
+  console.log(
+    `Android setup for ${libBaseName} (${rustTarget.arch}) complete.`,
+  );
 }
 
-async function setupIOSPlatform(rustTarget) {
+async function setupIOSPlatform(moduleConfig, rustTarget) {
+  const { rustProjectDir, expoModuleDir, libBaseName } = moduleConfig;
+  const rustProjectPath = path.join(PROJECT_ROOT_DIR, rustProjectDir);
+  const expoModulePath = path.join(PROJECT_ROOT_DIR, "modules", expoModuleDir);
+
   const platformType =
     rustTarget.type === "simulator" ? "iOS Simulator" : "iOS Device";
   printHeader(
-    `iOS: Building Rust for ${platformType} (${rustTarget.arch}) and Generating Swift Bindings`,
+    `iOS: Building ${libBaseName} for ${platformType} (${rustTarget.arch}) and Generating Swift Bindings`,
   );
 
   console.log(`Compiling Rust for ${platformType} target: ${rustTarget.arch}`);
   await executeCommand(
     "cargo",
     ["build", "--release", "--target", rustTarget.arch, "--lib"],
-    { cwd: RUST_PROJECT_DIR },
+    { cwd: rustProjectPath },
   );
   console.log(`Rust compilation for ${platformType} complete.`);
 
+  const libName = `lib${libBaseName}.a`;
   const libraryPath = path.join(
-    RUST_PROJECT_DIR,
+    rustProjectPath,
     "target",
     rustTarget.arch,
     "release",
-    rustTarget.libName,
+    libName,
   );
 
   console.log(`Generating Swift bindings for ${platformType}`);
   // Generate directly to the iOS module's Swift directory
-  const iosRustSwiftDir = path.join(EXPO_MODULE_DIR, "ios", "rust", "swift");
+  const iosRustSwiftDir = path.join(expoModulePath, "ios", "rust", "swift");
   await ensureDir(iosRustSwiftDir);
 
-  // NOTE: Bindings are not universal for simulator and device.
-  // For now, we'll just copy the specific target's .a file.
-  // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
-  // The Podspec would need to be adjusted or use a universal binary.
-  // For simplicity, let's assume the Podspec points to a generic name and we overwrite it
-  // or that the user manages which .a file to use (e.g. via XCode build settings or a universal binary step)
   await executeCommand(
     "cargo",
     [
@@ -306,25 +312,40 @@ async function setupIOSPlatform(rustTarget) {
       "--out-dir",
       iosRustSwiftDir,
     ],
-    { cwd: RUST_PROJECT_DIR },
+    { cwd: rustProjectPath },
   );
   console.log("Swift bindings generated directly to module.");
 
-  // For now, we'll just copy the specific target's .a file.
-  // A real setup might involve creating a universal binary (lipo) if both sim and device are built.
-  const iosRustLibDir = path.join(EXPO_MODULE_DIR, "ios", "rust");
-  await copyFile(
-    libraryPath,
-    path.join(iosRustLibDir, `libcairo_m_bindings.a`),
-  ); // Distinguish by type for now
+  // Copy the library to the iOS module
+  const iosRustLibDir = path.join(expoModulePath, "ios", "rust");
+  await copyFile(libraryPath, path.join(iosRustLibDir, libName));
 
-  await checkFileContent(
-    path.join(EXPO_MODULE_DIR, "ios", "CairoMBindings.podspec"),
-    "s.vendored_libraries",
-    "Podspec `s.vendored_libraries`",
-  );
+  // Check for podspec file (different naming conventions)
+  const podspecFiles = [
+    `${expoModuleDir
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join("")}.podspec`,
+    `${libBaseName}.podspec`,
+  ];
+
+  for (const podspecFile of podspecFiles) {
+    const podspecPath = path.join(expoModulePath, "ios", podspecFile);
+    try {
+      await fs.access(podspecPath);
+      await checkFileContent(
+        podspecPath,
+        "s.vendored_libraries",
+        "Podspec `s.vendored_libraries`",
+      );
+      break;
+    } catch {
+      // File doesn't exist, try next one
+    }
+  }
+
   console.log(
-    `iOS setup for ${platformType} (${rustTarget.arch}) complete. Pod install will run if any iOS target was processed.`,
+    `iOS setup for ${libBaseName} (${platformType}, ${rustTarget.arch}) complete.`,
   );
 }
 
@@ -337,19 +358,29 @@ async function main() {
     android: args.includes("--android"),
     "ios-sim": args.includes("--ios-sim"),
     "ios-device": args.includes("--ios-device"),
+    module: args.find((arg) => arg.startsWith("--module="))?.split("=")[1],
     help: args.includes("--help") || args.includes("-h"),
   };
 
   if (argv.help) {
     console.log(`
-Usage: node scripts/setup_rust_bindings.mjs [options]
+Usage: node scripts/setup_bindings.mjs [options]
 
 Options:
   --all           Build for Android (default arch) and iOS Simulator (default arch). This is the default if no specific platform is chosen.
   --android       Build for Android (default: ${DEFAULT_ANDROID_TARGET.arch}).
   --ios-sim       Build for iOS Simulator (default: ${DEFAULT_IOS_SIM_TARGET.arch}).
   --ios-device    Build for iOS Device (default: ${DEFAULT_IOS_DEVICE_TARGET.arch}).
+  --module=NAME   Build only the specified module. Available modules: ${Object.keys(MODULES).join(", ")}
   --help, -h      Show this help message.
+
+Available modules:
+${Object.entries(MODULES)
+  .map(
+    ([name, config]) =>
+      `  ${name}: ${config.rustProjectDir} -> ${config.expoModuleDir}`,
+  )
+  .join("\n")}
 
 Note:
 - You can configure specific architectures within the script.
@@ -359,16 +390,30 @@ Note:
     process.exit(0);
   }
 
-  // Determine what to run
+  // Determine which modules to build
+  const modulesToBuild = argv.module
+    ? MODULES[argv.module]
+      ? [argv.module]
+      : []
+    : Object.keys(MODULES);
+
+  if (modulesToBuild.length === 0) {
+    console.error(`❌ Error: Module "${argv.module}" not found.`);
+    console.error(`Available modules: ${Object.keys(MODULES).join(", ")}`);
+    process.exit(1);
+  }
+
+  // Determine what platforms to run
   const runAll =
     argv.all || (!argv.android && !argv["ios-sim"] && !argv["ios-device"]);
   const runAndroid = argv.android || runAll;
   const runIOSSim = argv["ios-sim"] || runAll;
   const runIOSDevice = argv["ios-device"];
 
-  printHeader("Starting Rust Bindings Setup for Cairo Mobile");
+  printHeader("Starting Rust Bindings Setup");
   process.chdir(PROJECT_ROOT_DIR);
   console.log(`Working directory: ${process.cwd()}`);
+  console.log(`Modules to build: ${modulesToBuild.join(", ")}`);
 
   printHeader("Checking Prerequisites");
   await checkCommand("rustup");
@@ -394,42 +439,46 @@ Note:
   }
   console.log("Prerequisites met.");
 
-  if (runAndroid) {
-    await setupAndroidPlatform(DEFAULT_ANDROID_TARGET);
-  }
-  if (runIOSSim) {
-    await setupIOSPlatform(DEFAULT_IOS_SIM_TARGET);
-  }
-  if (runIOSDevice) {
-    // Note: Building for both sim and device might require creating a universal binary (fat lib) for libcairo_m.a
-    // This script currently overwrites libcairo_m.a with the last built target.
-    // For a robust setup, you'd use `lipo` to combine device and simulator .a files.
-    console.warn(
-      "⚠️ Building for iOS device. If also building for simulator, the `libcairo_m_bindings.a` might be overwritten. Consider a universal binary build step.",
-    );
-    await setupIOSPlatform(DEFAULT_IOS_DEVICE_TARGET);
+  // Build each module
+  for (const moduleName of modulesToBuild) {
+    const moduleConfig = MODULES[moduleName];
+    printHeader(`Processing Module: ${moduleName}`);
+
+    if (runAndroid) {
+      await setupAndroidPlatform(moduleConfig, DEFAULT_ANDROID_TARGET);
+    }
+    if (runIOSSim) {
+      await setupIOSPlatform(moduleConfig, DEFAULT_IOS_SIM_TARGET);
+    }
+    if (runIOSDevice) {
+      if (runIOSSim) {
+        console.warn(
+          "⚠️ Building for iOS device. If also building for simulator, the library might be overwritten. Consider a universal binary build step.",
+        );
+      }
+      await setupIOSPlatform(moduleConfig, DEFAULT_IOS_DEVICE_TARGET);
+    }
   }
 
   if (iOSNeedsPodInstall) {
-    printHeader("iOS: Running pod install");
+    printHeader("Running Pod Install for iOS");
     await executeCommand("pod", ["install"], {
       cwd: path.join(PROJECT_ROOT_DIR, "ios"),
     });
     console.log("Pod install complete.");
   }
 
-  printHeader("Rust Bindings Setup for Cairo Mobile Finished Successfully!");
+  printHeader("Rust Bindings Setup Complete!");
+  console.log(
+    `✅ All requested modules (${modulesToBuild.join(", ")}) have been processed.`,
+  );
   console.log("💡 You can now try building your app:");
   console.log("   npm run android");
   console.log("   npm run ios-sim");
   console.log("   npm run ios-device");
 }
 
-main().catch((err) => {
-  console.error("❌ Script failed:", err.message || err);
-  if (err.stack && !err.message.includes(err.stack)) {
-    // Avoid duplicate stack if already in message
-    console.error(err.stack);
-  }
+main().catch((error) => {
+  console.error("❌ Error in main script:", error.message);
   process.exit(1);
 });
