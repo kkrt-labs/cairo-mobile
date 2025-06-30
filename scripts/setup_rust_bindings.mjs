@@ -195,7 +195,8 @@ async function setupAndroidPlatform(rustTarget) {
       ANDROID_PLATFORM_VERSION,
       "--", // Separator for cargo build args
       "build",
-      "--release",
+      "--profile",
+      "android-release",
       "--lib",
     ],
     { cwd: RUST_PROJECT_DIR },
@@ -206,7 +207,7 @@ async function setupAndroidPlatform(rustTarget) {
     RUST_PROJECT_DIR,
     "target",
     rustTarget.arch,
-    "release",
+    "android-release",
     rustTarget.libName,
   );
 
@@ -318,7 +319,7 @@ async function setupIOSPlatform(rustTarget) {
   ); // Distinguish by type for now
 
   await checkFileContent(
-    path.join(EXPO_MODULE_DIR, "ios", "CairoM.podspec"),
+    path.join(EXPO_MODULE_DIR, "ios", "CairoMBindings.podspec"),
     "s.vendored_libraries",
     "Podspec `s.vendored_libraries`",
   );

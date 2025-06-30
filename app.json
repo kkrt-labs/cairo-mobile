@@ -33,6 +33,15 @@
     "owner": "kkrt-labs",
     "plugins": [
       [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "extraProguardRules": "-keep class com.sun.jna.** { *; }\n-keep class * extends com.sun.jna.** { *; }\n-dontwarn java.awt.**\n-dontwarn javax.swing.**\n-keep class expo.modules.cairombindings.** { *; }\n-keep class uniffi.cairo_m_bindings.** { *; }\n-keep class * extends expo.modules.kotlin.records.Record { *; }\n-keepclassmembers class * extends expo.modules.kotlin.records.Record { *; }"
+          }
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/icons/splash-kkrt-logo.png",

@@ -24,7 +24,8 @@
     "react-native-paper": "^5.14.5",
     "react-native-safe-area-context": "^5.4.1",
     "react-native-vector-icons": "^10.2.0",
-    "expo-splash-screen": "~0.30.9"
+    "expo-splash-screen": "~0.30.9",
+    "expo-build-properties": "~0.14.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

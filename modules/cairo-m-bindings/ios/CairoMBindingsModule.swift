@@ -16,6 +16,10 @@ public class CairoMBindingsModule: Module {
         let result = try runAndGenerateProof(programJsonStr: programJsonStr, entrypointName: entrypointName, inputs: inputsAsUInt32)
         return [
           "returnValues": result.returnValues.map { Double($0) },
+          "numSteps": Double(result.numSteps),
+          "overallDuration": result.overallDuration,
+          "executionDuration": result.executionDuration,
+          "proofDuration": result.proofDuration,
           "overallFrequency": result.overallFrequency,
           "executionFrequency": result.executionFrequency,
           "proofFrequency": result.proofFrequency,
@@ -36,7 +40,7 @@ public class CairoMBindingsModule: Module {
     AsyncFunction("verifyProof") { (proof: String) -> [String: Any] in
       do {
         let result = try verifyProof(proof: proof)
-        return ["verificationTime": result.verificationTime]
+        return ["verificationDuration": result.verificationDuration]
       }
     }
   }

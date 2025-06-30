@@ -90,23 +90,27 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* Program Selection */}
-          <ProgramDropdown
-            selectedProgram={state.selectedProgram}
-            onProgramSelect={(program) =>
-              handleProgramSelect(program, mutations)
-            }
-            Programs={Programs}
-          />
-
-          {/* Number Input - Only show if fibonacci is selected and available */}
-          {state.selectedProgram === "fibonacci" && currentProgramAvailable && (
-            <NumberInput
-              value={state.inputValue}
-              onValueChange={(value) => setState({ inputValue: value })}
-              placeholder="Enter fibonacci term"
+          {/* Program Selection and Input Section */}
+          <View style={styles.inputSection}>
+            {/* Program Selection */}
+            <ProgramDropdown
+              selectedProgram={state.selectedProgram}
+              onProgramSelect={(program) =>
+                handleProgramSelect(program, mutations)
+              }
+              Programs={Programs}
             />
-          )}
+
+            {/* Number Input - Only show if fibonacci is selected and available */}
+            {state.selectedProgram === "fibonacci" &&
+              currentProgramAvailable && (
+                <NumberInput
+                  value={state.inputValue}
+                  onValueChange={(value) => setState({ inputValue: value })}
+                  placeholder="Enter fibonacci term"
+                />
+              )}
+          </View>
 
           {/* Action Buttons */}
           <ActionButtons
@@ -130,11 +134,13 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
 
           {/* Results - Only show if we have results and program is available */}
           {currentProgramAvailable && state.computationResult && (
-            <ResultsDisplay
-              result={state.computationResult}
-              showProof={!!state.computationResult.runProofResult}
-              showVerification={!!state.computationResult.verifyResult}
-            />
+            <View style={styles.resultsSection}>
+              <ResultsDisplay
+                result={state.computationResult}
+                showProof={!!state.computationResult.runProofResult}
+                showVerification={!!state.computationResult.verifyResult}
+              />
+            </View>
           )}
         </ScrollView>
       </SafeAreaView>
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 24,
-    gap: 24,
+    gap: 16,
     paddingBottom: 24,
   },
   errorContainer: {
@@ -218,5 +224,11 @@ const styles = StyleSheet.create({
     color: "#c62828",
     fontSize: 14,
     fontWeight: "500",
+  },
+  inputSection: {
+    gap: 12,
+  },
+  resultsSection: {
+    marginTop: -8,
   },
 });

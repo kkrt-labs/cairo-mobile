@@ -16,6 +16,10 @@ import uniffi.cairo_m_bindings.VerifyResult as UniFFIVerifyResult
 // It must implement `Record` and its fields should be marked with `@Field`.
 data class ExpoRunProofResult(
     @Field val returnValues: List<Double>,
+    @Field val numSteps: Double,
+    @Field val overallDuration: Double,
+    @Field val executionDuration: Double,
+    @Field val proofDuration: Double,
     @Field val overallFrequency: Double,
     @Field val executionFrequency: Double,
     @Field val proofFrequency: Double,
@@ -24,13 +28,17 @@ data class ExpoRunProofResult(
 ) : Record
 
 data class ExpoVerifyResult(
-    @Field val verificationTime: Double,
+    @Field val verificationDuration: Double,
 ) : Record
 
 // Extension functions to easily convert between the UniFFI and Expo types
 fun UniFFIRunProofResult.toExpoRunProofResult(): ExpoRunProofResult =
     ExpoRunProofResult(
         returnValues = this.returnValues.map { it.toDouble() },
+        numSteps = this.numSteps.toDouble(),
+        overallDuration = this.overallDuration,
+        executionDuration = this.executionDuration,
+        proofDuration = this.proofDuration,
         overallFrequency = this.overallFrequency,
         executionFrequency = this.executionFrequency,
         proofFrequency = this.proofFrequency,
@@ -40,7 +48,7 @@ fun UniFFIRunProofResult.toExpoRunProofResult(): ExpoRunProofResult =
 
 fun UniFFIVerifyResult.toExpoVerifyResult(): ExpoVerifyResult =
     ExpoVerifyResult(
-        verificationTime = this.verificationTime.toDouble(),
+        verificationDuration = this.verificationDuration.toDouble(),
     )
 
 class CairoMBindingsModule : Module() {

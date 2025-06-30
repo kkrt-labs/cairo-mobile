@@ -33,8 +33,7 @@ export const ProgramDropdown: React.FC<ProgramDropdownProps> = ({
     Programs.find((p) => p.type === selectedProgram)?.label ?? "Select Program";
 
   return (
-    <View style={styles.container}>
-      <Text style={[typography.sectionTitle, styles.title]}>Program</Text>
+    <View>
       <View style={styles.dropdownContainer}>
         <Pressable
           style={({ pressed }) => [
@@ -105,12 +104,6 @@ export const ProgramDropdown: React.FC<ProgramDropdownProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 16,
-  },
-  title: {
-    textAlign: "center",
-  },
   dropdownContainer: {
     position: "relative",
     zIndex: 1000,
