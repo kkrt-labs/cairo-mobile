@@ -106,10 +106,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
         {/* Verification Results */}
         {showVerification && result.verifyResult && (
-          <ResultItem
-            label="Verification Duration"
-            value={formatTime(result.verifyResult.verificationDuration)}
-          />
+          <Accordion title="Verification Results" defaultExpanded={true}>
+            <ResultItem
+              label="Verification Duration"
+              value={formatTime(result.verifyResult.verificationDuration)}
+            />
+          </Accordion>
         )}
       </View>
     </View>
