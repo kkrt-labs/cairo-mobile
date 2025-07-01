@@ -51,11 +51,19 @@ export interface ComputationResult {
 }
 
 export interface AppState {
-  inputValue: string;
   selectedProgram: Program;
   selectedSystem: SystemType;
   lastMutation: MutationType | null;
-  computationResult: ComputationResult | null;
+  // Store input values per system
+  inputValues: {
+    [system in SystemType]: string;
+  };
+  // Store computation results per system and program
+  computationResults: {
+    [system in SystemType]: {
+      [program in Program]?: ComputationResult;
+    };
+  };
 }
 
 // Helper functions to convert between types

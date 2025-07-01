@@ -52,12 +52,27 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { state, setState, handleProgramSelect, handleSystemSelect } =
-    useAppState();
-  const mutations = useComputationMutations(state, setState);
+  const {
+    state,
+    setState,
+    getCurrentInputValue,
+    setCurrentInputValue,
+    getCurrentComputationResult,
+    setCurrentComputationResult,
+    handleProgramSelect,
+    handleSystemSelect,
+  } = useAppState();
+  const mutations = useComputationMutations(
+    state,
+    setState,
+    setCurrentComputationResult,
+    getCurrentComputationResult,
+    getCurrentInputValue,
+  );
   const { errorMessage, hasError } = useErrorHandling(mutations);
 
   const { generateProofMutation, verifyProofMutation } = mutations;
+  const currentComputationResult = getCurrentComputationResult();
 
   const currentSystemConfig = SystemConfigurations[state.selectedSystem];
   const currentSystemPrograms = SystemPrograms[state.selectedSystem];
@@ -74,7 +89,7 @@ function AppContent() {
       state.selectedProgram === "fibonacci" &&
       state.selectedSystem === "cairo-m"
     ) {
-      const numValue = parseInt(state.inputValue, 10);
+      const numValue = parseInt(getCurrentInputValue(), 10);
 
       if (numValue > FIBONACCI_MAX_INPUT) {
         Alert.alert(
@@ -129,8 +144,8 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
               state.selectedProgram === "fibonacci" &&
               currentProgramAvailable && (
                 <NumberInput
-                  value={state.inputValue}
-                  onValueChange={(value) => setState({ inputValue: value })}
+                  value={getCurrentInputValue()}
+                  onValueChange={(value) => setCurrentInputValue(value)}
                   placeholder={
                     currentSystemConfig.inputPlaceholder || "Enter input"
                   }
@@ -145,10 +160,11 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
             isProofDisabled={
               !currentProgramAvailable ||
               generateProofMutation.isPending ||
-              (currentSystemConfig.supportsInput && !state.inputValue.trim())
+              (currentSystemConfig.supportsInput &&
+                !getCurrentInputValue().trim())
             }
             isVerifyDisabled={
-              !state.computationResult?.runProofResult ||
+              !currentComputationResult?.runProofResult ||
               verifyProofMutation.isPending
             }
           />
@@ -161,12 +177,12 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           )}
 
           {/* Results - Only show if we have results and program is available */}
-          {currentProgramAvailable && state.computationResult && (
+          {currentProgramAvailable && currentComputationResult && (
             <View style={styles.resultsSection}>
               <ResultsDisplay
-                result={state.computationResult}
-                showProof={!!state.computationResult.runProofResult}
-                showVerification={!!state.computationResult.verifyResult}
+                result={currentComputationResult}
+                showProof={!!currentComputationResult.runProofResult}
+                showVerification={!!currentComputationResult.verifyResult}
                 systemType={state.selectedSystem}
               />
             </View>

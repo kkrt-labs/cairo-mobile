@@ -5,6 +5,7 @@ import {
   AppState,
   UnifiedProofResult,
   UnifiedVerifyResult,
+  ComputationResult,
   convertCairoMResult,
   convertNoirResult,
   convertVerifyResult,
@@ -19,6 +20,9 @@ const noirFibCircuit = require("../assets/noir/noir_fib.json");
 export const useComputationMutations = (
   state: AppState,
   setState: (updates: Partial<AppState>) => void,
+  setCurrentComputationResult: (result: ComputationResult | null) => void,
+  getCurrentComputationResult: () => ComputationResult | null,
+  getCurrentInputValue: () => string,
 ) => {
   const generateProofMutation = useMutation({
     mutationFn: async (): Promise<UnifiedProofResult> => {
@@ -29,7 +33,7 @@ export const useComputationMutations = (
       }
 
       if (state.selectedSystem === "cairo-m") {
-        const numValue = parseInt(state.inputValue, 10);
+        const numValue = parseInt(getCurrentInputValue(), 10);
 
         if (isNaN(numValue) || numValue <= 0) {
           throw new Error("Invalid input: Please enter a positive number");
@@ -55,25 +59,26 @@ export const useComputationMutations = (
     onSuccess: (data) => {
       setState({
         lastMutation: "generateProof",
-        computationResult: {
-          runProofResult: data,
-          verifyResult: undefined,
-        },
+      });
+      setCurrentComputationResult({
+        runProofResult: data,
+        verifyResult: undefined,
       });
     },
     onError: (error) => {
       console.error("Generate proof error:", error);
-      setState({ computationResult: null });
+      setCurrentComputationResult(null);
     },
   });
 
   const verifyProofMutation = useMutation({
     mutationFn: async (): Promise<UnifiedVerifyResult> => {
-      if (!state.computationResult?.runProofResult) {
+      const currentResult = getCurrentComputationResult();
+      if (!currentResult?.runProofResult) {
         throw new Error("No computation result available for verification");
       }
 
-      const proof = state.computationResult.runProofResult.proof;
+      const proof = currentResult.runProofResult.proof;
 
       if (state.selectedSystem === "cairo-m") {
         const result = await CairoMBindings.verifyProof(proof);
@@ -91,10 +96,11 @@ export const useComputationMutations = (
     onSuccess: (data) => {
       setState({
         lastMutation: "verify",
-        computationResult: state.computationResult
-          ? { ...state.computationResult, verifyResult: data }
-          : null,
       });
+      const currentResult = getCurrentComputationResult();
+      if (currentResult) {
+        setCurrentComputationResult({ ...currentResult, verifyResult: data });
+      }
     },
     onError: (error) => {
       console.error("Verify proof error:", error);
