@@ -21,8 +21,7 @@ else
         export PATH="$HOME/.cargo/bin:$PATH"
         source "$HOME/.cargo/env" # Try sourcing again
     fi
-    rustup update nightly
-    rustup default nightly
+    rustup show
 fi
 
 echo "Rust version: $(rustc --version || echo 'rustc not found')"
