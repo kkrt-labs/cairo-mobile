@@ -56,19 +56,5 @@ public class NoirProveKitModule: Module {
         )
       }
     }
-
-    AsyncFunction("generateAndVerifyProof") { (circuitJsonStr: String, inputJsonStr: String) -> Void in
-      do {
-        try generateAndVerifyProof(circuitJsonStr: circuitJsonStr, inputJsonStr: inputJsonStr)
-      } catch {
-        throw NSError(
-          domain: "NoirProveKit",
-          code: 4,
-          userInfo: [
-            NSLocalizedDescriptionKey: "Failed to generate and verify proof: \(error.localizedDescription)"
-          ]
-        )
-      }
-    }
   }
 }

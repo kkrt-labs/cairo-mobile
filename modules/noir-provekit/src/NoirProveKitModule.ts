@@ -7,10 +7,6 @@ declare class NoirProveKitModule extends NativeModule {
     inputJsonStr: string,
   ): Promise<NoirProofResult>;
   verifyProof(circuitJsonStr: string, proof: string): Promise<NoirVerifyResult>;
-  generateAndVerifyProof(
-    circuitJsonStr: string,
-    inputJsonStr: string,
-  ): Promise<void>;
 }
 
 // This call loads the native module object from the JSI.

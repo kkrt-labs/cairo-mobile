@@ -269,41 +269,10 @@ pub fn verify_proof(
     prover.verify(proof)
 }
 
-/// Generate a Noir proof of the given circuit with the provided inputs, and verify it,
-/// returning detailed metrics.
-/// * `circuit_json_str` - The compiled Noir circuit JSON as a string.
-/// * `input_json_str` - The circuit inputs in a JSON format as a string.
-#[uniffi::export]
-pub fn generate_and_verify_proof(
-    circuit_json_str: &String,
-    /* trunk-ignore(clippy/ptr_arg) */
-    input_json_str: &String,
-) -> Result<(), NoirProverError> {
-    let prover = NoirProver::from_circuit(circuit_json_str)?;
-    let proof = prover.prove(input_json_str)?;
-    prover.verify(proof.proof)?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::{fs::File, path::Path};
-
-    #[test]
-    fn test_generate_and_verify_proof() {
-        let circuit_path = String::from("test_data/noir_fib/target/noir_fib.json");
-        let file = File::open(Path::new(&circuit_path)).expect("Failed opening circuit.json");
-        let program_artifact: ProgramArtifact =
-            sonic_rs::from_reader(file).expect("Failed reading JSON circuit");
-        let circuit_json_str =
-            sonic_rs::to_string(&program_artifact).expect("Failed to stringify ProgramArtifact");
-
-        let input_json_str = String::from(r#"{"return": "0x0"}"#);
-
-        generate_and_verify_proof(&circuit_json_str, &input_json_str)
-            .expect("Failed to verify proof");
-    }
 
     #[test]
     fn test_generate_proof() {
@@ -333,16 +302,6 @@ mod tests {
 
         let prover = NoirProver::from_circuit(&circuit_json_str).expect("Failed to create prover");
         let proof_result = prover.prove(&input_json_str).expect("Failed to generate proof");
-        let verify_result =
-            prover.verify(proof_result.proof.clone()).expect("Failed to verify proof");
-
-        // Print some metrics for manual verification
-        println!("Constraint count: {}", proof_result.constraint_count);
-        println!("Overall duration: {:.3}s", proof_result.overall_duration);
-        println!("Witness generation duration: {:.3}s", proof_result.witness_generation_duration);
-        println!("Proof generation duration: {:.3}s", proof_result.proof_generation_duration);
-        println!("Verification duration: {:.3}s", verify_result.verification_duration);
-        println!("Proof size: {} bytes", proof_result.proof_size);
-        println!("Return value: {}", proof_result.return_value);
+        prover.verify(proof_result.proof.clone()).expect("Failed to verify proof");
     }
 }

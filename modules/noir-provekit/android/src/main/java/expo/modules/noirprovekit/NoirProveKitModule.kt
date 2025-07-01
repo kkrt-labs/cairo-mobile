@@ -4,8 +4,6 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import uniffi.noir_provekit.generateProof
 import uniffi.noir_provekit.verifyProof
-import uniffi.noir_provekit.generateAndVerifyProof
-
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.records.Field
 
@@ -67,10 +65,6 @@ class NoirProveKitModule : Module() {
 
             AsyncFunction("verifyProof") { circuitJsonStr: String, proof: String ->
                 return@AsyncFunction verifyProof(circuitJsonStr, proof).toExpoNoirVerifyResult()
-            }
-
-            AsyncFunction("generateAndVerifyProof") { circuitJsonStr: String, inputJsonStr: String ->
-                generateAndVerifyProof(circuitJsonStr, inputJsonStr)
             }
         }
 }
