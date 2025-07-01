@@ -218,10 +218,7 @@ impl NoirProver {
 }
 
 fn serialize_return_value(return_value: Option<InputValue>) -> Result<String, NoirProverError> {
-    match return_value {
-        Some(return_value) => serialize_return_value_inner(return_value),
-        None => Ok(String::from("")),
-    }
+    return_value.map_or_else(|| Ok(String::new()), serialize_return_value_inner)
 }
 
 fn serialize_return_value_inner(return_value: InputValue) -> Result<String, NoirProverError> {
@@ -315,7 +312,7 @@ mod tests {
             .prove(&input_json_str)
             .expect("Failed to generate proof");
         prover
-            .verify(proof_result.proof.clone())
+            .verify(proof_result.proof)
             .expect("Failed to verify proof");
     }
 }
