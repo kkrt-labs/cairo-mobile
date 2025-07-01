@@ -19,6 +19,7 @@ lint:
   definitions:
     - name: clippy
       commands:
+        - run_from: ${root_or_parent_with(Cargo.toml)}
         - run:
             cargo clippy --message-format json --locked --workspace
             --all-targets -- -W clippy::all -W clippy::nursery --cap-lints=warn
