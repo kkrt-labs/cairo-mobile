@@ -20,6 +20,7 @@ lint:
     - name: clippy
       commands:
         - run:
+            RUSTFLAGS="-C link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld64.lld"
             cargo clippy --message-format json --locked --workspace
             --all-targets -- -W clippy::all -W clippy::nursery --cap-lints=warn
             --no-deps -D warnings -D unused_imports
