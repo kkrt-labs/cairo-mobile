@@ -86,7 +86,10 @@ impl NoirProver {
 
         let proof_scheme = NoirProofScheme::from_program(program.clone())
             .map_err(|e| NoirProverError::CreationError(e.to_string()))?;
-        Ok(Self { proof_scheme, program })
+        Ok(Self {
+            proof_scheme,
+            program,
+        })
     }
 
     /// Generates a proof of the loaded Noir circuit, for the given inputs, with detailed metrics.
@@ -103,8 +106,9 @@ impl NoirProver {
             .abi
             .encode(&input_map, None)
             .map_err(|e| NoirProverError::CreationError(e.to_string()))?;
-        let mut foreign_call_executor =
-            DefaultForeignCallBuilder::default().with_mocks(false).build::<FieldElement>();
+        let mut foreign_call_executor = DefaultForeignCallBuilder::default()
+            .with_mocks(false)
+            .build::<FieldElement>();
         let blackbox_solver = Bn254BlackBoxSolver(false);
         let mut witness_stack = execute_program(
             &self.program.bytecode,
@@ -207,7 +211,9 @@ impl NoirProver {
 
         let verification_duration = verification_start.elapsed();
 
-        Ok(NoirVerifyResult { verification_duration: verification_duration.as_secs_f64() })
+        Ok(NoirVerifyResult {
+            verification_duration: verification_duration.as_secs_f64(),
+        })
     }
 }
 
@@ -234,7 +240,11 @@ fn serialize_return_value_inner(return_value: InputValue) -> Result<String, Noir
             let map_str = map
                 .iter()
                 .map(|(key, value)| {
-                    format!("{}: {}", key, serialize_return_value_inner(value.clone()).unwrap())
+                    format!(
+                        "{}: {}",
+                        key,
+                        serialize_return_value_inner(value.clone()).unwrap()
+                    )
                 })
                 .collect::<Vec<String>>()
                 .join(",");
@@ -301,7 +311,11 @@ mod tests {
         let input_json_str = String::from(r#"{"return": "0x0"}"#);
 
         let prover = NoirProver::from_circuit(&circuit_json_str).expect("Failed to create prover");
-        let proof_result = prover.prove(&input_json_str).expect("Failed to generate proof");
-        prover.verify(proof_result.proof.clone()).expect("Failed to verify proof");
+        let proof_result = prover
+            .prove(&input_json_str)
+            .expect("Failed to generate proof");
+        prover
+            .verify(proof_result.proof.clone())
+            .expect("Failed to verify proof");
     }
 }
