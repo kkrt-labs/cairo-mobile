@@ -30,10 +30,7 @@ else
   exit 1
 fi
 
-echo "Running Cairo M bindings script with arguments: $PLATFORM_ARGS"
+echo "Running Rust bindings script with arguments: $PLATFORM_ARGS"
 node scripts/setup_rust_bindings.mjs $PLATFORM_ARGS
-
-echo "Running Noir ProveKit bindings script with arguments: $PLATFORM_ARGS"
-node scripts/setup_noir_provekit_bindings.mjs $PLATFORM_ARGS
 
 echo "Rust bindings setup script finished."
