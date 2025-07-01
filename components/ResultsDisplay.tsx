@@ -8,11 +8,7 @@ import {
   RunProofResult,
   VerifyResult,
 } from "../modules/cairo-m-bindings/src/CairoMBindings.types";
-
-export interface ComputationResult {
-  runProofResult: RunProofResult;
-  verifyResult?: VerifyResult;
-}
+import { ComputationResult } from "../hooks/types";
 
 interface ResultsDisplayProps {
   result: ComputationResult;
@@ -50,62 +46,105 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.accordionContainer}>
-        {/* Global Results */}
-        {showProof && (
-          <Accordion title="Global Results" defaultExpanded={true}>
+        {/* Imported Proof Information */}
+        {result.isImported && result.sharedData && (
+          <Accordion title="📥 Imported Proof" defaultExpanded={true}>
             <ResultItem
-              label="Fibonacci Value"
-              value={result.runProofResult.returnValues[0]}
+              label="Program"
+              value={result.sharedData.metadata.program}
             />
             <ResultItem
-              label="Number of Steps"
-              value={formatSteps(result.runProofResult.numSteps)}
+              label="Input"
+              value={result.sharedData.metadata.input.join(", ")}
             />
             <ResultItem
-              label="Execution + Proof Duration"
-              value={formatTime(result.runProofResult.overallDuration)}
+              label="Shared"
+              value={new Date(
+                result.sharedData.metadata.timestamp,
+              ).toLocaleDateString()}
             />
             <ResultItem
-              label="Execution + Proof Frequency"
-              value={formatFrequency(result.runProofResult.overallFrequency)}
-            />
-          </Accordion>
-        )}
-
-        {/* Execution Results */}
-        {showProof && (
-          <Accordion title="Execution Results" defaultExpanded={true}>
-            <ResultItem
-              label="Execution Duration"
-              value={formatTime(result.runProofResult.executionDuration)}
-            />
-            <ResultItem
-              label="Execution Frequency"
-              value={formatFrequency(result.runProofResult.executionFrequency)}
+              label="Version"
+              value={result.sharedData.metadata.version}
             />
           </Accordion>
         )}
 
-        {/* Proving Results */}
-        {showProof && (
-          <Accordion title="Proving Results" defaultExpanded={true}>
-            <ResultItem
-              label="Proof Duration"
-              value={formatTime(result.runProofResult.proofDuration)}
-            />
-            <ResultItem
-              label="Proof Frequency"
-              value={formatFrequency(result.runProofResult.proofFrequency)}
-            />
-            <ResultItem
-              label="Proof Size"
-              value={formatProofSize(result.runProofResult.proofSize)}
-            />
-          </Accordion>
+        {/* Only show generation results for non-imported proofs */}
+        {!result.isImported && (
+          <>
+            {/* Global Results */}
+            {showProof && (
+              <Accordion title="Global Results" defaultExpanded={true}>
+                <ResultItem
+                  label="Fibonacci Value"
+                  value={result.runProofResult.returnValues[0]}
+                />
+                <ResultItem
+                  label="Number of Steps"
+                  value={formatSteps(result.runProofResult.numSteps)}
+                />
+                <ResultItem
+                  label="Execution + Proof Duration"
+                  value={formatTime(result.runProofResult.overallDuration)}
+                />
+                <ResultItem
+                  label="Execution + Proof Frequency"
+                  value={formatFrequency(
+                    result.runProofResult.overallFrequency,
+                  )}
+                />
+              </Accordion>
+            )}
+
+            {/* Execution Results */}
+            {showProof && (
+              <Accordion title="Execution Results" defaultExpanded={true}>
+                <ResultItem
+                  label="Execution Duration"
+                  value={formatTime(result.runProofResult.executionDuration)}
+                />
+                <ResultItem
+                  label="Execution Frequency"
+                  value={formatFrequency(
+                    result.runProofResult.executionFrequency,
+                  )}
+                />
+              </Accordion>
+            )}
+
+            {/* Proving Results */}
+            {showProof && (
+              <Accordion title="Proving Results" defaultExpanded={true}>
+                <ResultItem
+                  label="Proof Duration"
+                  value={formatTime(result.runProofResult.proofDuration)}
+                />
+                <ResultItem
+                  label="Proof Frequency"
+                  value={formatFrequency(result.runProofResult.proofFrequency)}
+                />
+                <ResultItem
+                  label="Proof Size"
+                  value={formatProofSize(result.runProofResult.proofSize)}
+                />
+              </Accordion>
+            )}
+
+            {/* Verification Results */}
+            {showVerification && result.verifyResult && (
+              <Accordion title="Verification Results" defaultExpanded={true}>
+                <ResultItem
+                  label="Verification Duration"
+                  value={formatTime(result.verifyResult.verificationDuration)}
+                />
+              </Accordion>
+            )}
+          </>
         )}
 
-        {/* Verification Results */}
-        {showVerification && result.verifyResult && (
+        {/* Verification Results for imported proofs */}
+        {result.isImported && showVerification && result.verifyResult && (
           <Accordion title="Verification Results" defaultExpanded={true}>
             <ResultItem
               label="Verification Duration"

@@ -17,6 +17,7 @@ import { ProgramDropdown, Program } from "../components/ProgramDropdown";
 import { FIBONACCI_MAX_INPUT, NumberInput } from "../components/NumberInput";
 import { ActionButtons } from "../components/ActionButtons";
 import { ResultsDisplay } from "../components/ResultsDisplay";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Data and Utils
 import { Programs } from "../components/data/constants";
@@ -29,6 +30,7 @@ import { typography } from "../components/styles/typography";
 import { useComputationMutations } from "../hooks/useComputationMutations";
 import { useAppState } from "../hooks/useAppState";
 import { useErrorHandling } from "../hooks/useErrorHandling";
+import { useFileHandling } from "../hooks/useFileHandling";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -50,8 +52,59 @@ function AppContent() {
   const { state, setState, handleProgramSelect } = useAppState();
   const mutations = useComputationMutations(state, setState);
   const { errorMessage, hasError } = useErrorHandling(mutations);
+  const { incomingProofData, clearIncomingData, isProcessingFile } =
+    useFileHandling();
 
-  const { generateProofMutation, verifyProofMutation } = mutations;
+  const { generateProofMutation, verifyProofMutation, importProofMutation } =
+    mutations;
+
+  // Handle incoming file data
+  useEffect(() => {
+    try {
+      if (incomingProofData && !importProofMutation.isPending) {
+        // Process the incoming proof data
+        const runProofResult = {
+          returnValues: incomingProofData.metadata.returnValues,
+          numSteps: incomingProofData.metadata.numSteps,
+          overallDuration: 0,
+          executionDuration: 0,
+          proofDuration: 0,
+          overallFrequency: 0,
+          executionFrequency: 0,
+          proofFrequency: 0,
+          proofSize: incomingProofData.metadata.proofSize,
+          proof: incomingProofData.proof,
+        };
+
+        setState({
+          lastMutation: "importProof",
+          selectedProgram: incomingProofData.metadata.program as any,
+          inputValue: "", // Reset input value when importing via file association
+          computationResult: {
+            runProofResult,
+            verifyResult: undefined,
+            isImported: true,
+            sharedData: incomingProofData,
+          },
+        });
+
+        // Clear the incoming data so it doesn't process again
+        clearIncomingData();
+      }
+    } catch (error) {
+      console.error("Error processing incoming proof data:", error);
+      Alert.alert(
+        "Error",
+        "Failed to process the imported proof data. Please try importing again.",
+      );
+      clearIncomingData(); // Clear the problematic data
+    }
+  }, [
+    incomingProofData,
+    clearIncomingData,
+    setState,
+    importProofMutation.isPending,
+  ]);
 
   const currentProgramAvailable =
     Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
@@ -116,6 +169,7 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           <ActionButtons
             onGenerateProof={handleGenerateProof}
             onVerifyProof={verifyProofMutation.mutate}
+            onImportProof={() => importProofMutation.mutate()}
             isProofDisabled={
               !currentProgramAvailable || generateProofMutation.isPending
             }
@@ -123,7 +177,20 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
               !state.computationResult?.runProofResult ||
               verifyProofMutation.isPending
             }
+            isImportDisabled={importProofMutation.isPending}
+            proofResult={state.computationResult?.runProofResult}
+            selectedProgram={state.selectedProgram}
+            inputValue={state.inputValue}
           />
+
+          {/* File Processing Indicator */}
+          {isProcessingFile && (
+            <View style={styles.processingContainer}>
+              <Text style={styles.processingText}>
+                📁 Loading proof from file...
+              </Text>
+            </View>
+          )}
 
           {/* Error Display */}
           {hasError && (
@@ -189,9 +256,11 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <AppContent />
-      </View>
+      <ErrorBoundary>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+          <AppContent />
+        </View>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }
@@ -213,6 +282,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 16,
     paddingBottom: 24,
+  },
+  processingContainer: {
+    backgroundColor: `${colors.primary}20`,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: `${colors.primary}40`,
+    marginTop: 16,
+  },
+  processingText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "500",
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
+    lineHeight: 20,
   },
   errorContainer: {
     backgroundColor: "#ffebee",

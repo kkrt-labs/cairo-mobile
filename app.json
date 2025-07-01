@@ -13,7 +13,28 @@
       "bundleIdentifier": "org.kakarot.cairo-mobile",
       "appleTeamId": "3767P43YCA",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Cairo Proof File",
+            "CFBundleTypeRole": "Editor",
+            "LSItemContentTypes": ["public.json"],
+            "LSHandlerRank": "Alternate",
+            "CFBundleTypeExtensions": ["cairoproof.json", "json"],
+            "CFBundleTypeDescription": "Cairo ZK Proof File"
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "org.kakarot.cairo-proof",
+            "UTTypeDescription": "Cairo ZK Proof File",
+            "UTTypeConformsTo": ["public.json"],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": ["cairoproof.json", "json"],
+              "public.mime-type": ["application/json"]
+            }
+          }
+        ]
       }
     },
     "android": {
@@ -23,7 +44,37 @@
         "backgroundColor": "#003D29"
       },
       "edgeToEdgeEnabled": true,
-      "package": "org.kakarot.cairo_mobile"
+      "package": "org.kakarot.cairo_mobile",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "file",
+              "mimeType": "application/json"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/json"
+            }
+          ],
+          "category": ["DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "file",
+              "pathPattern": ".*\\.cairoproof\\.json"
+            },
+            {
+              "scheme": "content",
+              "pathPattern": ".*\\.cairoproof\\.json"
+            }
+          ],
+          "category": ["DEFAULT"]
+        }
+      ]
     },
     "extra": {
       "eas": {
