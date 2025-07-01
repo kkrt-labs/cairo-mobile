@@ -30,7 +30,7 @@ else
   exit 1
 fi
 
-echo "Running Node script with arguments: $PLATFORM_ARGS"
+echo "Running Rust bindings script with arguments: $PLATFORM_ARGS"
 node scripts/setup_rust_bindings.mjs $PLATFORM_ARGS
 
 echo "Rust bindings setup script finished."

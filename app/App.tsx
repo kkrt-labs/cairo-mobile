@@ -14,12 +14,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Components
 import { ProgramDropdown, Program } from "../components/ProgramDropdown";
+import { SystemDropdown } from "../components/SystemDropdown";
 import { FIBONACCI_MAX_INPUT, NumberInput } from "../components/NumberInput";
 import { ActionButtons } from "../components/ActionButtons";
 import { ResultsDisplay } from "../components/ResultsDisplay";
 
 // Data and Utils
-import { Programs } from "../components/data/constants";
+import {
+  Systems,
+  SystemPrograms,
+  SystemConfigurations,
+} from "../components/data/constants";
 
 // Styles
 import { colors } from "../components/styles/colors";
@@ -47,18 +52,44 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { state, setState, handleProgramSelect } = useAppState();
-  const mutations = useComputationMutations(state, setState);
+  const {
+    state,
+    setState,
+    getCurrentInputValue,
+    setCurrentInputValue,
+    getCurrentComputationResult,
+    setCurrentComputationResult,
+    handleProgramSelect,
+    handleSystemSelect,
+  } = useAppState();
+  const mutations = useComputationMutations(
+    state,
+    setState,
+    setCurrentComputationResult,
+    getCurrentComputationResult,
+    getCurrentInputValue,
+  );
   const { errorMessage, hasError } = useErrorHandling(mutations);
 
   const { generateProofMutation, verifyProofMutation } = mutations;
+  const currentComputationResult = getCurrentComputationResult();
 
+  const currentSystemConfig = SystemConfigurations[state.selectedSystem];
+  const currentSystemPrograms = SystemPrograms[state.selectedSystem];
   const currentProgramAvailable =
-    Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
+    currentSystemPrograms.find((p) => p.type === state.selectedProgram)
+      ?.available ?? false;
+
+  // Get the current system label for the header
+  const currentSystemLabel =
+    Systems.find((s) => s.type === state.selectedSystem)?.label || "Unknown";
 
   const handleGenerateProof = () => {
-    if (state.selectedProgram === "fibonacci") {
-      const numValue = parseInt(state.inputValue, 10);
+    if (
+      state.selectedProgram === "fibonacci" &&
+      state.selectedSystem === "cairo-m"
+    ) {
+      const numValue = parseInt(getCurrentInputValue(), 10);
 
       if (numValue > FIBONACCI_MAX_INPUT) {
         Alert.alert(
@@ -82,7 +113,7 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
 
         {/* App Title */}
         <View style={styles.header}>
-          <Text style={typography.appTitle}>Cairo M</Text>
+          <Text style={typography.appTitle}>{currentSystemLabel}</Text>
         </View>
 
         <ScrollView
@@ -90,24 +121,34 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* Program Selection and Input Section */}
+          {/* System and Program Selection Section */}
           <View style={styles.inputSection}>
+            {/* System Selection */}
+            <SystemDropdown
+              selectedSystem={state.selectedSystem}
+              onSystemSelect={(system) => handleSystemSelect(system, mutations)}
+              systems={Systems}
+            />
+
             {/* Program Selection */}
             <ProgramDropdown
               selectedProgram={state.selectedProgram}
               onProgramSelect={(program) =>
                 handleProgramSelect(program, mutations)
               }
-              Programs={Programs}
+              Programs={currentSystemPrograms}
             />
 
-            {/* Number Input - Only show if fibonacci is selected and available */}
-            {state.selectedProgram === "fibonacci" &&
+            {/* Number Input - Only show if system supports input and fibonacci is selected */}
+            {currentSystemConfig.supportsInput &&
+              state.selectedProgram === "fibonacci" &&
               currentProgramAvailable && (
                 <NumberInput
-                  value={state.inputValue}
-                  onValueChange={(value) => setState({ inputValue: value })}
-                  placeholder="Enter fibonacci term"
+                  value={getCurrentInputValue()}
+                  onValueChange={(value) => setCurrentInputValue(value)}
+                  placeholder={
+                    currentSystemConfig.inputPlaceholder || "Enter input"
+                  }
                 />
               )}
           </View>
@@ -117,10 +158,13 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
             onGenerateProof={handleGenerateProof}
             onVerifyProof={verifyProofMutation.mutate}
             isProofDisabled={
-              !currentProgramAvailable || generateProofMutation.isPending
+              !currentProgramAvailable ||
+              generateProofMutation.isPending ||
+              (currentSystemConfig.supportsInput &&
+                !getCurrentInputValue().trim())
             }
             isVerifyDisabled={
-              !state.computationResult?.runProofResult ||
+              !currentComputationResult?.runProofResult ||
               verifyProofMutation.isPending
             }
           />
@@ -133,12 +177,13 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           )}
 
           {/* Results - Only show if we have results and program is available */}
-          {currentProgramAvailable && state.computationResult && (
+          {currentProgramAvailable && currentComputationResult && (
             <View style={styles.resultsSection}>
               <ResultsDisplay
-                result={state.computationResult}
-                showProof={!!state.computationResult.runProofResult}
-                showVerification={!!state.computationResult.verifyResult}
+                result={currentComputationResult}
+                showProof={!!currentComputationResult.runProofResult}
+                showVerification={!!currentComputationResult.verifyResult}
+                systemType={state.selectedSystem}
               />
             </View>
           )}

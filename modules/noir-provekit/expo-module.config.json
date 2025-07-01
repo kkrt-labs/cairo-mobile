@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["NoirProveKitModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.noirprovekit.NoirProveKitModule"]
+  }
+}

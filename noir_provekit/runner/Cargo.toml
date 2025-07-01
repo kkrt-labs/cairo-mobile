@@ -1,0 +1,19 @@
+[package]
+name = "noir-provekit"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+acvm.workspace = true
+bn254_blackbox_solver.workspace = true
+nargo.workspace = true
+noirc_abi.workspace = true
+noirc_artifacts.workspace = true
+noir-r1cs.workspace = true
+serde.workspace = true
+sonic-rs.workspace = true
+uniffi.workspace = true
+thiserror.workspace = true
