@@ -14,6 +14,7 @@
       "appleTeamId": "3767P43YCA",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "LSSupportsOpeningDocumentsInPlace": true,
         "CFBundleDocumentTypes": [
           {
             "CFBundleTypeName": "Cairo Proof File",
