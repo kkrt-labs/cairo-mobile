@@ -1,5 +1,13 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View, Text, ScrollView, Alert } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useState } from "react";
@@ -109,6 +117,9 @@ function AppContent() {
     Programs.find((p) => p.type === state.selectedProgram)?.available ?? false;
 
   const handleGenerateProof = () => {
+    // Dismiss keyboard before generating proof
+    Keyboard.dismiss();
+
     if (state.selectedProgram === "fibonacci") {
       const numValue = parseInt(state.inputValue, 10);
 
@@ -127,6 +138,18 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
     generateProofMutation.mutate();
   };
 
+  const handleVerifyProof = () => {
+    // Dismiss keyboard before verifying proof
+    Keyboard.dismiss();
+    verifyProofMutation.mutate();
+  };
+
+  const handleImportProof = () => {
+    // Dismiss keyboard before importing proof
+    Keyboard.dismiss();
+    importProofMutation.mutate();
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} edges={["top"]}>
@@ -141,73 +164,78 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Program Selection and Input Section */}
-          <View style={styles.inputSection}>
-            {/* Program Selection */}
-            <ProgramDropdown
-              selectedProgram={state.selectedProgram}
-              onProgramSelect={(program) =>
-                handleProgramSelect(program, mutations)
-              }
-              Programs={Programs}
-            />
-
-            {/* Number Input - Only show if fibonacci is selected and available */}
-            {state.selectedProgram === "fibonacci" &&
-              currentProgramAvailable && (
-                <NumberInput
-                  value={state.inputValue}
-                  onValueChange={(value) => setState({ inputValue: value })}
-                  placeholder="Enter fibonacci term"
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.innerContent}>
+              {/* Program Selection and Input Section */}
+              <View style={styles.inputSection}>
+                {/* Program Selection */}
+                <ProgramDropdown
+                  selectedProgram={state.selectedProgram}
+                  onProgramSelect={(program) =>
+                    handleProgramSelect(program, mutations)
+                  }
+                  Programs={Programs}
                 />
-              )}
-          </View>
 
-          {/* Action Buttons */}
-          <ActionButtons
-            onGenerateProof={handleGenerateProof}
-            onVerifyProof={verifyProofMutation.mutate}
-            onImportProof={() => importProofMutation.mutate()}
-            isProofDisabled={
-              !currentProgramAvailable || generateProofMutation.isPending
-            }
-            isVerifyDisabled={
-              !state.computationResult?.runProofResult ||
-              verifyProofMutation.isPending
-            }
-            isImportDisabled={importProofMutation.isPending}
-            proofResult={state.computationResult?.runProofResult}
-            selectedProgram={state.selectedProgram}
-            inputValue={state.inputValue}
-          />
+                {/* Number Input - Only show if fibonacci is selected and available */}
+                {state.selectedProgram === "fibonacci" &&
+                  currentProgramAvailable && (
+                    <NumberInput
+                      value={state.inputValue}
+                      onValueChange={(value) => setState({ inputValue: value })}
+                      placeholder="Enter fibonacci term"
+                    />
+                  )}
+              </View>
 
-          {/* File Processing Indicator */}
-          {isProcessingFile && (
-            <View style={styles.processingContainer}>
-              <Text style={styles.processingText}>
-                📁 Loading proof from file...
-              </Text>
-            </View>
-          )}
-
-          {/* Error Display */}
-          {hasError && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          )}
-
-          {/* Results - Only show if we have results and program is available */}
-          {currentProgramAvailable && state.computationResult && (
-            <View style={styles.resultsSection}>
-              <ResultsDisplay
-                result={state.computationResult}
-                showProof={!!state.computationResult.runProofResult}
-                showVerification={!!state.computationResult.verifyResult}
+              {/* Action Buttons */}
+              <ActionButtons
+                onGenerateProof={handleGenerateProof}
+                onVerifyProof={handleVerifyProof}
+                onImportProof={handleImportProof}
+                isProofDisabled={
+                  !currentProgramAvailable || generateProofMutation.isPending
+                }
+                isVerifyDisabled={
+                  !state.computationResult?.runProofResult ||
+                  verifyProofMutation.isPending
+                }
+                isImportDisabled={importProofMutation.isPending}
+                proofResult={state.computationResult?.runProofResult}
+                selectedProgram={state.selectedProgram}
+                inputValue={state.inputValue}
               />
+
+              {/* File Processing Indicator */}
+              {isProcessingFile && (
+                <View style={styles.processingContainer}>
+                  <Text style={styles.processingText}>
+                    📁 Loading proof from file...
+                  </Text>
+                </View>
+              )}
+
+              {/* Error Display */}
+              {hasError && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              )}
+
+              {/* Results - Only show if we have results and program is available */}
+              {currentProgramAvailable && state.computationResult && (
+                <View style={styles.resultsSection}>
+                  <ResultsDisplay
+                    result={state.computationResult}
+                    showProof={!!state.computationResult.runProofResult}
+                    showVerification={!!state.computationResult.verifyResult}
+                  />
+                </View>
+              )}
             </View>
-          )}
+          </TouchableWithoutFeedback>
         </ScrollView>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -279,6 +307,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     gap: 16,
     paddingBottom: 24,
+  },
+  innerContent: {
+    gap: 16,
   },
   processingContainer: {
     backgroundColor: `${colors.primary}20`,
