@@ -1,7 +1,7 @@
-import { NativeModule, requireNativeModule } from "expo";
+import { NativeModulesProxy, RequireNativeModule } from "expo-modules-core";
 import { RunProofResult, VerifyResult } from "./CairoMBindings.types";
 
-declare class CairoMBindingsModule extends NativeModule {
+declare class CairoMBindingsModule {
   runAndGenerateProof(
     programJsonStr: string,
     entrypointName: string,
@@ -11,4 +11,4 @@ declare class CairoMBindingsModule extends NativeModule {
 }
 
 // This call loads the native module object from the JSI.
-export default requireNativeModule<CairoMBindingsModule>("CairoMBindings");
+export default RequireNativeModule<CairoMBindingsModule>("CairoMBindings");
