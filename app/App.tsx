@@ -17,7 +17,6 @@ import { ProgramDropdown, Program } from "../components/ProgramDropdown";
 import { FIBONACCI_MAX_INPUT, NumberInput } from "../components/NumberInput";
 import { ActionButtons } from "../components/ActionButtons";
 import { ResultsDisplay } from "../components/ResultsDisplay";
-import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Data and Utils
 import { Programs } from "../components/data/constants";
@@ -256,11 +255,9 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-          <AppContent />
-        </View>
-      </ErrorBoundary>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <AppContent />
+      </View>
     </QueryClientProvider>
   );
 }

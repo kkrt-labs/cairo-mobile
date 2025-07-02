@@ -1,8 +1,9 @@
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
-import { Alert, Platform } from "react-native";
+import { Alert } from "react-native";
 import { RunProofResult } from "../../modules/cairo-m-bindings/src/CairoMBindings.types";
+import { PROOF_SHARING, MESSAGES } from "./constants";
 
 export interface SharedProofData {
   proof: string;
@@ -31,7 +32,7 @@ export const createSharedProofData = (
       numSteps: proofResult.numSteps,
       proofSize: proofResult.proofSize,
       timestamp: new Date().toISOString(),
-      version: "1.0.0",
+      version: PROOF_SHARING.VERSION,
     },
   };
 };
@@ -40,7 +41,7 @@ export const shareProofAsFile = async (
   sharedData: SharedProofData,
 ): Promise<void> => {
   try {
-    const fileName = `cairo_proof_${sharedData.metadata.program}_${Date.now()}.cairoproof.json`;
+    const fileName = `${PROOF_SHARING.SHARE_FILE_PREFIX}${sharedData.metadata.program}_${Date.now()}${PROOF_SHARING.FILE_EXTENSION}`;
     const content = JSON.stringify(sharedData, null, 2);
 
     // Create a temporary file
@@ -49,16 +50,16 @@ export const shareProofAsFile = async (
 
     // Share the file
     await Sharing.shareAsync(fileUri, {
-      mimeType: "application/json",
-      dialogTitle: "Share Cairo Proof",
-      UTI: "public.json",
+      mimeType: PROOF_SHARING.MIME_TYPE,
+      dialogTitle: MESSAGES.SHARE_DIALOG_TITLE,
+      UTI: PROOF_SHARING.UTI,
     });
 
     // Clean up the temporary file
     await FileSystem.deleteAsync(fileUri, { idempotent: true });
   } catch (error) {
     console.error("Error sharing proof:", error);
-    Alert.alert("Error", "Failed to share proof. Please try again.");
+    Alert.alert("Error", MESSAGES.SHARE_ERROR);
   }
 };
 
@@ -66,7 +67,7 @@ export const importProofFromFile =
   async (): Promise<SharedProofData | null> => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "application/json",
+        type: PROOF_SHARING.MIME_TYPE,
         copyToCacheDirectory: true,
       });
 
@@ -78,26 +79,27 @@ export const importProofFromFile =
       const content = await response.text();
       const parsedData = JSON.parse(content);
 
-      if (!isValidSharedProofData(parsedData)) {
-        Alert.alert("Error", "Invalid proof data format in selected file.");
+      // Basic structure check - if it has the expected fields, it's valid
+      if (!hasValidStructure(parsedData)) {
+        Alert.alert("Error", MESSAGES.INVALID_PROOF_FORMAT);
         return null;
       }
 
       return parsedData;
     } catch (error) {
       console.error("Error importing from file:", error);
-      Alert.alert(
-        "Error",
-        "Failed to import proof from file. Please check the file format.",
-      );
+      Alert.alert("Error", MESSAGES.IMPORT_ERROR);
       return null;
     }
   };
 
-const isValidSharedProofData = (data: any): data is SharedProofData => {
+// Simple structure check - just verify expected fields exist
+const hasValidStructure = (data: any): data is SharedProofData => {
   return (
+    data &&
     typeof data === "object" &&
     typeof data.proof === "string" &&
+    data.metadata &&
     typeof data.metadata === "object" &&
     typeof data.metadata.program === "string" &&
     Array.isArray(data.metadata.input) &&

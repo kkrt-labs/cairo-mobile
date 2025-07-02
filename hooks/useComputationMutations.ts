@@ -60,7 +60,6 @@ export const useComputationMutations = (
       }
 
       const proof = state.computationResult.runProofResult.proof;
-
       return CairoMBindings.verifyProof(proof);
     },
     onSuccess: (data) => {
