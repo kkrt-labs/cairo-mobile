@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, View, TextInput } from "react-native";
+import React, { useRef } from "react";
+import { StyleSheet, View, TextInput, Keyboard } from "react-native";
 import { colors } from "./styles/colors";
 
 interface NumberInputProps {
@@ -16,6 +16,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   onValueChange,
   placeholder = "Enter a number",
 }) => {
+  const inputRef = useRef<TextInput>(null);
+
   // Check if the current value is valid for fibonacci input
   const isValidFibonacci = () => {
     if (!value) return true; // Empty input is valid (allows user to type)
@@ -23,18 +25,28 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     return !isNaN(numValue) && numValue >= 0 && numValue <= FIBONACCI_MAX_INPUT;
   };
 
+  const handleSubmitEditing = () => {
+    // Dismiss keyboard when user presses "done"
+    inputRef.current?.blur();
+    Keyboard.dismiss();
+  };
+
   const isValid = isValidFibonacci();
 
   return (
     <View style={styles.container}>
       <TextInput
+        ref={inputRef}
         style={[styles.input, !isValid && styles.inputInvalid]}
         value={value}
         onChangeText={onValueChange}
+        onSubmitEditing={handleSubmitEditing}
         placeholder={placeholder}
         placeholderTextColor={colors.disabled}
         keyboardType="numeric"
         returnKeyType="done"
+        blurOnSubmit={true}
+        enablesReturnKeyAutomatically={true}
       />
     </View>
   );
