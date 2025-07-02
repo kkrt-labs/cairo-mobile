@@ -203,6 +203,9 @@ Please use an input inferior to ${FIBONACCI_MAX_INPUT}.`,
                   verifyProofMutation.isPending
                 }
                 isImportDisabled={importProofMutation.isPending}
+                isGenerating={generateProofMutation.isPending}
+                isVerifying={verifyProofMutation.isPending}
+                isImporting={importProofMutation.isPending}
                 proofResult={state.computationResult?.runProofResult}
                 selectedProgram={state.selectedProgram}
                 inputValue={state.inputValue}

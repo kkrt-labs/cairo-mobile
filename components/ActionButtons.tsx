@@ -1,5 +1,12 @@
-import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Animated,
+  Easing,
+} from "react-native";
 import { colors } from "./styles/colors";
 import { shareProofAsFile, createSharedProofData } from "./utils/proofSharing";
 import { RunProofResult } from "../modules/cairo-m-bindings/src/CairoMBindings.types";
@@ -11,11 +18,142 @@ interface ActionButtonsProps {
   isProofDisabled: boolean;
   isVerifyDisabled: boolean;
   isImportDisabled: boolean;
+  // Loading states
+  isGenerating: boolean;
+  isVerifying: boolean;
+  isImporting: boolean;
   // Add proof data for sharing
   proofResult?: RunProofResult;
   selectedProgram: string;
   inputValue: string;
 }
+
+interface LoadingButtonProps {
+  onPress: () => void;
+  disabled: boolean;
+  isLoading: boolean;
+  title: string;
+  loadingTitle: string;
+  isPrimary?: boolean;
+}
+
+const LoadingButton: React.FC<LoadingButtonProps> = ({
+  onPress,
+  disabled,
+  isLoading,
+  title,
+  loadingTitle,
+  isPrimary = true,
+}) => {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [progressAnim] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isLoading) {
+      setElapsedTime(0);
+
+      // Start progress animation (indeterminate)
+      const progressLoop = () => {
+        progressAnim.setValue(0);
+        Animated.timing(progressAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: false,
+        }).start(() => {
+          if (isLoading) progressLoop();
+        });
+      };
+      progressLoop();
+
+      // Timer
+      interval = setInterval(() => {
+        setElapsedTime((prev) => prev + 0.1);
+      }, 100);
+    } else {
+      progressAnim.setValue(0);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isLoading, progressAnim]);
+
+  const formatTime = (seconds: number): string => {
+    return `${seconds.toFixed(1)}s`;
+  };
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "100%"],
+  });
+
+  // Use consistent styling whether loading or not
+  const buttonStyle = isPrimary ? styles.primaryButton : styles.secondaryButton;
+  const textStyle = isPrimary
+    ? styles.primaryButtonText
+    : styles.secondaryButtonText;
+  const disabledTextStyle = isPrimary
+    ? styles.disabledButtonText
+    : styles.disabledSecondaryButtonText;
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        buttonStyle,
+        disabled &&
+          (isPrimary
+            ? styles.primaryButtonDisabled
+            : styles.disabledSecondaryButton),
+        isLoading &&
+          (isPrimary
+            ? styles.primaryButtonLoading
+            : styles.secondaryButtonLoading),
+        pressed && !disabled && { transform: [{ scale: 0.98 }] },
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+      android_ripple={
+        !disabled ? { color: `${colors.background}4D` } : undefined
+      }
+    >
+      {isLoading && (
+        <View style={styles.progressBarContainer}>
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progressWidth,
+                backgroundColor: isPrimary
+                  ? `${colors.surface}30`
+                  : `${colors.primary}30`,
+              },
+            ]}
+          />
+        </View>
+      )}
+
+      <View style={styles.buttonContent}>
+        <Text
+          style={[
+            disabled ? disabledTextStyle : textStyle,
+            isLoading && styles.loadingText,
+          ]}
+        >
+          {isLoading ? loadingTitle : title}
+        </Text>
+
+        {isLoading && (
+          <Text style={[textStyle, styles.timerText]}>
+            {formatTime(elapsedTime)}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+};
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onGenerateProof,
@@ -24,6 +162,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   isProofDisabled,
   isVerifyDisabled,
   isImportDisabled,
+  isGenerating,
+  isVerifying,
+  isImporting,
   proofResult,
   selectedProgram,
   inputValue,
@@ -47,51 +188,23 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
     <View style={styles.container}>
       {/* Primary Actions */}
       <View style={styles.primaryActions}>
-        <Pressable
-          style={({ pressed }) => [
-            isProofDisabled ? styles.disabledButton : styles.primaryButton,
-            isProofDisabled && styles.primaryButtonDisabled,
-            pressed && !isProofDisabled && styles.primaryButtonPressed,
-          ]}
+        <LoadingButton
           onPress={onGenerateProof}
           disabled={isProofDisabled}
-          android_ripple={
-            !isProofDisabled ? { color: `${colors.background}4D` } : undefined
-          }
-        >
-          <Text
-            style={[
-              isProofDisabled
-                ? styles.disabledButtonText
-                : styles.primaryButtonText,
-            ]}
-          >
-            Generate Proof
-          </Text>
-        </Pressable>
+          isLoading={isGenerating}
+          title="Generate Proof"
+          loadingTitle="Generating..."
+          isPrimary={true}
+        />
 
-        <Pressable
-          style={({ pressed }) => [
-            isVerifyDisabled ? styles.disabledButton : styles.primaryButton,
-            isVerifyDisabled && styles.primaryButtonDisabled,
-            pressed && !isVerifyDisabled && styles.primaryButtonPressed,
-          ]}
+        <LoadingButton
           onPress={onVerifyProof}
           disabled={isVerifyDisabled}
-          android_ripple={
-            !isVerifyDisabled ? { color: `${colors.background}4D` } : undefined
-          }
-        >
-          <Text
-            style={[
-              isVerifyDisabled
-                ? styles.disabledButtonText
-                : styles.primaryButtonText,
-            ]}
-          >
-            Verify Proof
-          </Text>
-        </Pressable>
+          isLoading={isVerifying}
+          title="Verify Proof"
+          loadingTitle="Verifying..."
+          isPrimary={true}
+        />
       </View>
 
       {/* Secondary Actions - Side by side */}
@@ -101,7 +214,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             isShareDisabled
               ? styles.disabledSecondaryButton
               : styles.secondaryButton,
-            pressed && !isShareDisabled && styles.secondaryButtonPressed,
+            pressed && !isShareDisabled && { transform: [{ scale: 0.98 }] },
           ]}
           onPress={handleShareAsFile}
           disabled={isShareDisabled}
@@ -117,26 +230,14 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           </Text>
         </Pressable>
 
-        <Pressable
-          style={({ pressed }) => [
-            isImportDisabled
-              ? styles.disabledSecondaryButton
-              : styles.secondaryButton,
-            pressed && !isImportDisabled && styles.secondaryButtonPressed,
-          ]}
+        <LoadingButton
           onPress={onImportProof}
           disabled={isImportDisabled}
-        >
-          <Text
-            style={[
-              isImportDisabled
-                ? styles.disabledSecondaryButtonText
-                : styles.secondaryButtonText,
-            ]}
-          >
-            Import Proof
-          </Text>
-        </Pressable>
+          isLoading={isImporting}
+          title="Import Proof"
+          loadingTitle="Importing..."
+          isPrimary={false}
+        />
       </View>
     </View>
   );
@@ -149,7 +250,6 @@ const styles = StyleSheet.create({
   primaryActions: {
     gap: 12,
   },
-
   buttonRow: {
     flexDirection: "row",
     gap: 8,
@@ -162,12 +262,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 48,
+    overflow: "hidden",
+    position: "relative",
   },
   primaryButtonDisabled: {
     backgroundColor: colors.disabled,
   },
-  primaryButtonPressed: {
-    transform: [{ scale: 0.98 }],
+  primaryButtonLoading: {
+    backgroundColor: colors.primary,
+    opacity: 0.7,
+  },
+  progressBarContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  progressBar: {
+    height: "100%",
+    borderRadius: 24,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    zIndex: 1,
   },
   primaryButtonText: {
     color: colors.surface,
@@ -176,23 +297,16 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.3,
   },
-  primaryButtonTextDisabled: {
-    color: colors.surface,
-    opacity: 0.8,
+  loadingText: {
+    fontWeight: "700",
   },
-  disabledButton: {
-    backgroundColor: colors.surfaceDisabled,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: colors.borderDisabled,
+  timerText: {
+    fontSize: 14,
+    fontWeight: "500",
+    opacity: 0.9,
   },
   disabledButtonText: {
-    color: colors.onBackground,
+    color: colors.surface,
     fontSize: 16,
     fontWeight: "500",
     fontFamily: "Inter_500Medium",
@@ -210,10 +324,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
     flex: 1,
-  },
-  secondaryButtonPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: colors.background,
+    overflow: "hidden",
+    position: "relative",
   },
   secondaryButtonText: {
     color: colors.primary,
@@ -221,6 +333,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: "Inter_500Medium",
     letterSpacing: 0.2,
+  },
+  secondaryButtonLoading: {
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+    opacity: 0.7,
   },
   disabledSecondaryButton: {
     backgroundColor: colors.surfaceDisabled,
